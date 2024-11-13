@@ -1,0 +1,226 @@
+/* Reset some default styles */
+body {
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+    color: var(--textColor);
+}
+
+.container {
+    display: flex;
+    justify-content: space-between;
+    margin: 30px;
+}
+
+.main-content {
+    flex: 3;
+    padding-right: 20px;
+    border-right: 1px solid var(--lightBorder1);
+}
+
+.sidebar {
+    flex: 1;
+    padding-left: 20px;
+}
+
+.axil-post-details {
+    margin-bottom: 40px;
+}
+
+figure {
+    margin: 20px 0;
+}
+
+.post-images {
+    margin-bottom: 20px;
+}
+
+.post-images img {
+    width: 100%;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+blockquote {
+    margin: 20px 0;
+    font-size: 24px;
+    color: var(--subTitle);
+    border-left: 4px solid var(--lightBorder1);
+    padding-left: 15px;
+}
+
+.embed-responsive {
+    margin: 20px 0;
+}
+
+.embed-responsive iframe {
+    width: 100%;
+    height: 350px;
+    border-radius: 8px;
+}
+
+.post-details-content {
+    margin-bottom: 20px;
+}
+
+.post-details-content p {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--cardSubtitle);
+}
+
+.about-author {
+    display: flex;
+    align-items: center;
+    margin-top: 20px;
+    padding: 15px;
+    background-color: var(--lightBackground1);
+    border-radius: 8px;
+    border: 1px solid var(--lightBorder1);
+}
+
+.about-author img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    margin-right: 15px;
+}
+
+.author-info .title {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.author-info .subtitle {
+    font-size: 14px;
+    color: var(--subTitle);
+}
+
+.tagcloud {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 15px;
+}
+
+.tagcloud .MuiChip-root {
+    margin: 5px;
+}
+
+/* Comments Section */
+.axil-total-comment-post {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--lightBorder1);
+    padding: 10px 0;
+    margin-top: 30px;
+}
+
+.comment-respond {
+    margin-top: 20px;
+}
+
+.comment-respond .title {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.comment-list {
+    margin-top: 20px;
+    list-style: none;
+    padding: 0;
+}
+
+.single-comment {
+    display: flex;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--lightBorder1);
+}
+
+.comment-img {
+    margin-right: 15px;
+}
+
+.comment-img img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+}
+
+.comment-text {
+    flex: 1;
+}
+
+.comment-text .commenter {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.comment-text .time-spent {
+    font-size: 12px;
+    color: var(--subTitle);
+}
+
+.reply-edit {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.reply-form {
+    margin-top: 10px;
+}
+
+.reply-form .MuiTextField-root {
+    width: 100%;
+}
+
+/* Sidebar Styles */
+.sidebar h3 {
+    font-size: 18px;
+    margin-bottom: 15px;
+    color: var(--titleColor);
+}
+
+.sidebar .project-item {
+    display: flex;
+    margin-bottom: 15px;
+    padding: 10px;
+    border: 1px solid var(--lightBorder1);
+    border-radius: 8px;
+    background-color: var(--lightBackground1);
+    transition: transform 0.3s;
+}
+
+.sidebar .project-item:hover {
+    transform: translateY(-5px);
+}
+
+.sidebar .project-item img {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    object-fit: cover;
+    margin-right: 10px;
+}
+
+.sidebar .project-item-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar .project-item-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--titleColor);
+}
+
+.sidebar .project-item-title:hover {
+    text-decoration: underline;
+}
+
+.sidebar .project-item-year {
+    font-size: 12px;
+    color: var(--subTitle);
+}

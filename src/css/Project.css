@@ -1,0 +1,229 @@
+#content {
+    display: flex;
+    align-items: center;
+    margin-top: 40px; 
+    margin-left: 40px;
+}
+
+#search-form {
+    display: flex;
+    align-items: center; 
+}
+
+/* Adjust button styles if needed */
+button {
+    margin-right: 40px; /* Space between buttons */
+    
+}
+
+input {
+    margin-left: 40px; /* Space between input and buttons */
+}
+
+
+.square {
+    padding: 0 40px 0 10px;
+    border-radius: 0;
+    transition-delay: 0.4s, 0s, 0.4s;
+}
+
+.search {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    margin-left: 20px;
+    transform: translate(-100%, -50%);
+}
+
+.search:before {
+    content: "";
+    position: absolute;
+    width: 20px;
+    height: 4px;
+    background-color: #fff;
+    transform: rotate(45deg);
+    margin-top: 26px;
+    margin-left: 17px;
+    transition: 0.2s ease-in-out;
+}
+
+.close:before, .close:after {
+    content: "";
+    position: absolute;
+    width: 27px;
+    height: 4px;
+    background-color: #fff;
+    cursor: pointer;
+    transform: rotate(45deg);
+}
+
+.close:after {
+    transform: rotate(-45deg);
+}
+
+.card-image {
+  max-width: 100%;
+  height: auto;
+  width: 500px;
+}
+/* .card-title {
+  color: var(--titleColor);
+  font-size: 1.375rem;
+  line-height: 24px;
+  font-weight: 700;
+  margin: 15px 0 0 0;
+} */
+.card-title {
+  color: var(--titleColor);
+  font-size: 1.375rem;
+  line-height: 1.2;
+  font-weight: 700;
+  margin: 0 0 10px 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.card-subtitle {
+  color: var(--cardSubtitle);
+  font-size: 1.063rem;
+  line-height: 1.5rem;
+  max-height: 3rem; /* Limit height to control overflow */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* .certificate-card {
+  background-color: var(--lightBackground2);
+  box-shadow: var(--lightBoxShadowDark) 0px 10px 30px -15px;
+  padding: 1.5rem;
+  border-radius: 10px;
+  border: 1px solid var(--lightBorder1);
+  -webkit-transition: all 0.3s ease;
+  -o-transition: all 0.3s ease;
+  transition: all 0.3s ease;
+  margin-top: 30px;
+  margin-bottom: 30px;
+  margin-left: 20px;
+} */
+.certificate-card {
+  background-color: var(--lightBackground2);
+  box-shadow: var(--lightBoxShadowDark) 0px 10px 30px -15px;
+  padding: 1.5rem;
+  border-radius: 10px;
+  border: 1px solid var(--lightBorder1);
+  transition: all 0.3s ease;
+  margin: 20px; /* Adjusted for equal spacing */
+  width: 400px; /* Set a consistent width */
+  height: 450px; /* Fixed height to ensure uniformity */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.card-detail-div {
+  text-align: center;
+  margin-top: 10px;
+  overflow: hidden; /* Prevents overflow of large text */
+}
+
+.certificate-card:hover {
+  box-shadow: var(--lightBoxShadowDark) 0px 20px 30px -10px;
+}
+/* .dark-mode.certificate-card:hover {
+  box-shadow: var(--achievementCertificateCardHoverDark) 0px 20px 30px -10px;
+} */
+
+/* .project-image-div {
+  position: relative;
+  height: 250px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+} */
+.project-image-div {
+  position: relative;
+  height: 200px; /* Set fixed height for image container */
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.project-cards-div {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem 1rem;
+}
+/* .project-card-footer {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+} */
+.project-card-footer {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.project-card-footer span.card-tag {
+  background: var(--buttonColor);
+  color: var(--lightBackground3);
+  vertical-align: middle;
+  align-items: center;
+  border-radius: 4px;
+  display: inline-flex;
+  font-size: 0.75rem;
+  height: 2em;
+  justify-content: center;
+  white-space: nowrap;
+  line-height: 1.5;
+  margin: 0 0.5rem 0.5rem 0;
+  padding: 0 0.75em;
+  cursor: pointer;
+  transition: 0.2s ease-in;
+}
+span.card-tag:hover {
+  background: var(--buttonHover);
+}
+.like-view-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.like-button {
+  padding: 0; /* Remove default padding */
+  margin-right: 8px; /* Space between like button and count */
+  color: #555; /* Default color for like button */
+}
+
+.likes-count {
+  font-weight: bold; /* Make likes count bold */
+  margin-right: 16px; /* Space between likes and views */
+}
+
+.views-container {
+  display: flex;
+  align-items: center; /* Center icon and text vertically */
+}
+
+.views-icon {
+  font-size: 20px; /* Size of the views icon */
+  margin-right: 4px; /* Space between icon and text */
+}
+
+.views-count {
+  color: #555; /* Color for views count */
+  font-weight: bold; /* Make views count bold */
+}

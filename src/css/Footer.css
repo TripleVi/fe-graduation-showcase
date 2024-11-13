@@ -1,0 +1,78 @@
+/* Footer.css */
+.footer {
+    background-color: var(--lightBackground3);
+    padding: 20px;
+    color: var(--textColor);
+    box-shadow: 0 -4px 6px var(--lightBoxShadow);
+  }
+  
+  .footer-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    flex-wrap: wrap;
+  }
+  
+  .footer-section {
+    flex: 1 1 200px;
+    margin: 10px;
+  }
+  
+  .footer-title {
+    color: var(--titleColor);
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+  }
+  
+  .footer-text {
+    color: var(--textColor);
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  
+  .footer-links {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .footer-links li {
+    margin: 5px 0;
+  }
+  
+  .footer-links a {
+    color: var(--appLink);
+    text-decoration: none;
+  }
+  
+  .footer-links a:hover {
+    color: var(--buttonHover);
+  }
+  
+  .social-icons {
+    display: flex;
+  }
+  
+  .icon {
+    width: 35px;
+    height: 35px;
+    margin-right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--textColorDark);
+    border-radius: 50%;
+    font-size: 1rem;
+    transition: background-color 0.3s;
+  }
+  
+  .icon:hover {
+    background-color: var(--buttonHover);
+  }
+  
+  .footer-bottom {
+    text-align: center;
+    margin-top: 20px;
+    color: var(--subTitle);
+    font-size: 0.8rem;
+  }
+  
