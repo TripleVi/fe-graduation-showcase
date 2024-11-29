@@ -1,16 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import {
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    Button,
-    MenuItem,
-    TextField,
-    Grid,
-    InputLabel,
-    Select,
-    FormControl
+import { Dialog, DialogActions, DialogContent, DialogTitle, Button, MenuItem,
+    TextField, Grid, InputLabel, Select, FormControl, Snackbar
 } from "@mui/material";
 import axios from "axios";
 
@@ -18,7 +8,7 @@ const UpdateProjectForm = ({ open, handleClose, project, onUpdate }) => {
     const [section, setSection] = useState(""); // To control which section is being edited
     const [formData, setFormData] = useState({
         title: project?.title || "",
-        description: project?.description || "",
+        description: project?.description || [{ title: "", content: "" }], // Updated structure
         year: project?.year || 2024,
         topicId: project?.topicId || 1,
         hashtags: Array.isArray(project?.hashtags) ? project.hashtags.join(", ") : "",
@@ -29,8 +19,10 @@ const UpdateProjectForm = ({ open, handleClose, project, onUpdate }) => {
         videoId: project?.videoId || "",
     });
     const [topics, setTopics] = useState([]);
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState("");
     const api = axios.create({
-        baseURL: "http://graduationshowcase.online/api/v1",
+        baseURL: "https://graduationshowcase.online/api/v1",
         headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -45,6 +37,11 @@ const UpdateProjectForm = ({ open, handleClose, project, onUpdate }) => {
             const updatedAuthors = [...formData.authors];
             updatedAuthors[parseInt(index)][field] = value;
             setFormData({ ...formData, authors: updatedAuthors });
+        } else if (name.startsWith("description")) {
+            const [_, index, field] = name.split(".");
+            const updatedDescription = [...formData.description];
+            updatedDescription[index][field] = value;
+            setFormData({ ...formData, description: updatedDescription });
         } else {
             setFormData({ ...formData, [name]: files ? files[0] : value });
         }
@@ -58,7 +55,7 @@ const UpdateProjectForm = ({ open, handleClose, project, onUpdate }) => {
             
             setFormData({
                 title: projectData.title || "",
-                description: projectData.description || "",
+                description: Array.isArray(projectData.description) ? projectData.description : [{ title: "", content: "" }],
                 year: projectData.year || 2024,
                 topicId: projectData.topicId || 1,
                 hashtags: Array.isArray(projectData.hashtags) ? projectData.hashtags.join(", ") : "",
@@ -110,7 +107,10 @@ const UpdateProjectForm = ({ open, handleClose, project, onUpdate }) => {
                 const { title, description, year, topicId, hashtags, videoId } = formData;
                 const projectInfo = {
                     title,
-                    description,
+                    description: description.map(item => ({
+                        title: item.title,
+                        content: item.content
+                    })),
                     year,
                     topicId,
                     hashtags: hashtags.split(",").map(tag => tag.trim()),
@@ -146,7 +146,8 @@ const UpdateProjectForm = ({ open, handleClose, project, onUpdate }) => {
                     console.error("Author ID is undefined.");
                 }
             }
-
+            setSnackbarMessage("Project updated successfully!");
+            setSnackbarOpen(true);
             onUpdate(); 
             handleClose(); 
         } catch (error) {
@@ -154,7 +155,20 @@ const UpdateProjectForm = ({ open, handleClose, project, onUpdate }) => {
         }
     };
 
+    const handleAddDescription = () => {
+        setFormData({
+            ...formData,
+            description: [...formData.description, { title: "", content: "" }]
+        });
+    };
+
+    const handleRemoveDescription = (index) => {
+        const updatedDescription = formData.description.filter((_, i) => i !== index);
+        setFormData({ ...formData, description: updatedDescription });
+    };
+
     return (
+        <>
         <Dialog open={open} onClose={handleClose}>
             <DialogTitle>Update Project</DialogTitle>
             <DialogContent>
@@ -182,14 +196,42 @@ const UpdateProjectForm = ({ open, handleClose, project, onUpdate }) => {
                             value={formData.title}
                             onChange={handleChange}
                         />
-                        <TextField
-                            label="Description"
-                            name="description"
-                            fullWidth
-                            margin="normal"
-                            value={formData.description}
-                            onChange={handleChange}
-                        />
+                        {formData.description.map((desc, index) => (
+                            <div key={index}>
+                                <Grid item xs={6}>
+                                    <TextField
+                                        label="Description Title"
+                                        name={`description.${index}.title`}
+                                        fullWidth
+                                        margin="normal"
+                                        value={desc.title}
+                                        onChange={handleChange}
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <TextField
+                                        label="Content"
+                                        name={`description.${index}.content`}
+                                        fullWidth
+                                        margin="normal"
+                                        multiline
+                                        rows={4}
+                                        value={desc.content}
+                                        onChange={handleChange}
+                                        variant="outlined"
+                                        style={{ maxHeight: 200, overflowY: 'auto' }}
+                                    />
+                                </Grid>
+                                
+                                <Button onClick={() => handleRemoveDescription(index)} color="secondary">
+                                    Remove
+                                </Button>
+                                
+                            </div>
+                        ))}
+                        <Button onClick={handleAddDescription} color="primary">
+                            Add Description
+                        </Button>
                         <TextField
                             label="Year"
                             name="year"
@@ -293,6 +335,13 @@ const UpdateProjectForm = ({ open, handleClose, project, onUpdate }) => {
                 </Button>
             </DialogActions>
         </Dialog>
+        <Snackbar
+                open={snackbarOpen}
+                autoHideDuration={6000}
+                onClose={() => setSnackbarOpen(false)}
+                message={snackbarMessage}
+        />
+        </>
     );
 };
 

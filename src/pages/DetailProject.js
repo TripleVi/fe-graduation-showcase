@@ -1,34 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import {
-    AppBar,
-    Toolbar,
-    Button,
-    Box,
-    TextField,
-    List,
-    ListItem,
-    ListItemText,
-    Container,
-    Typography,
-    Avatar,
-    Grid,
-    Chip,
-    ListItemAvatar,
-    IconButton,
-    Menu,
-    MenuItem
-} from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { Button, TextField, Container, Typography, Avatar, Grid, Chip } from '@mui/material';
 import '../css/DetailProject.css';
 import Header from "../pages/Header";
 import Footer from "../pages/Footer";
-import { useLocalStorage } from "../useLocalStorage";
-import { StyleProvider } from "../contexts/StyleContext";
+import BoxAi from "./ChatBox";
 
 const api = axios.create({
-    baseURL: 'http://graduationshowcase.online/api/v1',
+    baseURL: 'https://graduationshowcase.online/api/v1',
     headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`
     }
@@ -41,19 +21,15 @@ const DetailProjectPage = () => {
     const [newComment, setNewComment] = useState('');
     const [editingCommentId, setEditingCommentId] = useState(null);
     const [editingCommentContent, setEditingCommentContent] = useState('');
-    const [replyToCommentId, setReplyToCommentId] = useState(null); // New state for replying to comments
-    const [showReplies, setShowReplies] = useState({}); // New state to track which replies to show
-    const [replyContent, setReplyContent] = useState(''); // New state for reply content
+    const [replyToCommentId, setReplyToCommentId] = useState(null);
+    const [replyContent, setReplyContent] = useState('');
+    const [showReplies, setShowReplies] = useState({});
+    const [replies, setReplies] = useState({});
     const [user, setUser] = useState({
         avatar: '',
         name: '',
         email: '',
     });
-    const [anchorEl, setAnchorEl] = useState(null);
-    const navigate = useNavigate();
-    const darkPref = window.matchMedia("(prefers-color-scheme: dark)");
-    const [isDark, setIsDark] = useLocalStorage("isDark", darkPref.matches);
-    
 
     useEffect(() => {
         const fetchProjectDetails = async () => {
@@ -61,16 +37,24 @@ const DetailProjectPage = () => {
                 const response = await api.get(`/projects/${projectId}`);
                 setProject(response.data);
                 const commentsResponse = await api.get(`/projects/${projectId}/comments`);
-                setComments(commentsResponse.data);
+                const commentData = commentsResponse.data.data;
+                const parentComments = commentData.filter((comment) => !comment.parentId);
+                const replyComments = commentData.filter((comment) => comment.parentId);
+                const repliesMap = replyComments.reduce((acc, reply) => {
+                    if (!acc[reply.parentId]) {
+                        acc[reply.parentId] = [];
+                    }
+                    acc[reply.parentId].push(reply);
+                    return acc;
+                }, {});
+                setComments(parentComments);
+                setReplies(repliesMap);
             } catch (error) {
                 console.error('Error fetching project details:', error);
             }
         };
 
-        if (projectId) {
-            fetchProjectDetails();
-        }
-
+        if (projectId) fetchProjectDetails();
         const token = localStorage.getItem('token');
         if (token) {
             setUser({
@@ -81,21 +65,23 @@ const DetailProjectPage = () => {
         }
     }, [projectId]);
 
+    // Comment handling functions remain the same
     const handlePostComment = async () => {
         if (!newComment) return;
-
         try {
             const response = await api.post(`/projects/${projectId}/comments`, {
                 content: newComment,
-                parentId: replyToCommentId || null, // Use replyToCommentId for parentId
-            }, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}` // Include Bearer token
-                }
+                parentId: null,
             });
-            setComments([...comments, response.data]);
+            const newCommentData = {
+                ...response.data,
+                author: {
+                    name: user.name,
+                    avatarUrl: user.avatar,
+                },
+            };
+            setComments([...comments, newCommentData]);
             setNewComment('');
-            setReplyToCommentId(null); // Reset reply state after posting
         } catch (error) {
             console.error('Error posting comment:', error);
         }
@@ -108,7 +94,6 @@ const DetailProjectPage = () => {
 
     const handleUpdateComment = async () => {
         if (!editingCommentContent) return;
-
         try {
             await api.put(`/comments/${editingCommentId}`, {
                 content: editingCommentContent,
@@ -126,7 +111,6 @@ const DetailProjectPage = () => {
     const handleDeleteComment = async (commentId) => {
         const confirmDelete = window.confirm('Are you sure you want to delete this comment?');
         if (!confirmDelete) return;
-
         try {
             await api.delete(`/comments/${commentId}`);
             setComments(comments.filter((comment) => comment.id !== commentId));
@@ -136,177 +120,341 @@ const DetailProjectPage = () => {
     };
 
     const handleReplyToComment = (commentId) => {
-        setReplyToCommentId(commentId); // Set the ID of the comment to reply to
-        setReplyContent(''); // Reset reply content field
+        setReplyToCommentId(commentId);
+        setReplyContent('');
+    };
+
+    const handleToggleReplies = async (commentId) => {
+        setShowReplies((prev) => ({
+            ...prev,
+            [commentId]: !prev[commentId],
+        }));
+
+        if (!replies[commentId]) {
+            try {
+                const response = await api.get(`/comments/${commentId}/descendants`);
+                const replyData = response.data.data;
+                setReplies((prev) => ({
+                    ...prev,
+                    [commentId]: replyData,
+                }));
+            } catch (error) {
+                console.error('Error fetching replies:', error);
+            }
+        }
     };
 
     const handlePostReply = async () => {
         if (!replyContent) return;
-
         try {
             const response = await api.post(`/projects/${projectId}/comments`, {
                 content: replyContent,
-                parentId: replyToCommentId, // Link reply to parent comment
+                parentId: replyToCommentId,
             });
-            setComments([...comments, response.data]);
-            setReplyToCommentId(null); // Clear reply state
-            setReplyContent(''); // Clear input after posting reply
+            const newReplyData = {
+                ...response.data,
+                author: {
+                    name: user.name,
+                    avatarUrl: user.avatar,
+                },
+            };
+            setReplies((prev) => ({
+                ...prev,
+                [replyToCommentId]: [...(prev[replyToCommentId] || []), newReplyData],
+            }));
+            setShowReplies((prev) => ({
+                ...prev,
+                [replyToCommentId]: true,
+            }));
+            setReplyToCommentId(null);
+            setReplyContent('');
         } catch (error) {
             console.error('Error posting reply:', error);
         }
     };
 
-    const toggleReplies = (commentId) => {
-        setShowReplies((prev) => ({
-            ...prev,
-            [commentId]: !prev[commentId], // Toggle the visibility of replies
-        }));
-    };
-
-    // Render loading message if project is not yet loaded
     if (!project) {
-        return <div>Loading project details...</div>;
+        return <div className="loading">Loading project details...</div>;
     }
 
-    const changeTheme = () => {
-        setIsDark(!isDark);
-    };
-
     return (
-        <>
-        <div className={isDark ? "dark-mode detail" : "light-mode"}>
-            <StyleProvider value={{ isDark: isDark, changeTheme: changeTheme }}>
-                <Header />
-
-                <Container className="axil-post-details">
-                    <figure className="post-images">
-                        <Grid container spacing={1}>
-                            {project.photoUrls.map((photoUrl, index) => (
-                                <Grid item xs={12} sm={6} md={4} key={index}>
-                                    <img src={photoUrl} alt={`Project Photo ${index + 1}`} className="card-image" />
-                                </Grid>
-                            ))}
-                        </Grid>
-                    </figure>
-
-                    <blockquote>
-                        <p>{project.title} — {project.authors.map(author => <span key={author.name}>{author.name}</span>)}</p>
-                    </blockquote>
-
-                    <div className="post-details-content">
-                        <Typography variant="h4">{project.title}</Typography>
-                        <Typography variant="subtitle1"><em>{project.year}</em></Typography>
-                    </div>
-
+        <div className="project-detail">
+            <Header />
+            
+            <article className="blog-post">
+                {/* Hero Section */}
+                <div className="hero-section">
                     <div className="embed-responsive">
                         <iframe
-                            className="embed-responsive-item"
-                            // src="https://www.youtube.com/embed/example"
-                            title="Video Title"
+                            src={`https://www.youtube.com/embed/${project.videoId}`}
+                            title={project.title}
                             allowFullScreen
                         ></iframe>
                     </div>
+                </div>
 
-                    <div className="about-author">
-                        {project.authors.map(author => (
-                            <ListItem key={author.name}>
-                                <ListItemAvatar>
-                                    <Avatar src={author.avatarUrl || 'default_avatar_url.jpg'} alt={author.name} />
-                                </ListItemAvatar>
-                                <ListItemText primary={author.name} secondary={author.email} />
-                            </ListItem>
-                        ))}
+                {/* Article Header */}
+                <div className="article-header">
+                    <Typography variant="h1" className="article-title">
+                        {project.title}
+                    </Typography>
+                    <div className="article-meta">
+                        <span className="article-date">{project.year}</span>
+                        <span className="article-authors">
+                            By {project.authors.map(author => author.name).join(', ')}
+                        </span>
                     </div>
-
                     <div className="tagcloud">
                         {project.hashtags.map((tag, index) => (
-                            <Chip key={index} label={`#${tag}`} sx={{ marginRight: 1 }} />
+                            <Chip key={index} label={`#${tag}`} className="tag-chip" />
                         ))}
                     </div>
+                </div>
 
-                    <Box sx={{ mt: 2 }}>
+                {/* Article Content */}
+                <div className="article-content">
+                    {project.description && project.description.map((desc, index) => (
+                        <section key={index} className="content-section">
+                            <Typography variant="h2" className="section-title">
+                                {desc.title}
+                            </Typography>
+                            <Typography variant="body1" className="section-content">
+                                {desc.content}
+                            </Typography>
+                            
+                            {project.photos && (
+                                <div className="image-gallery">
+                                    <Grid container spacing={3}>
+                                        {project.photos.map((photo) => {
+                                            if (photo.id === desc.photoId) {
+                                                return (
+                                                    <Grid item xs={12} md={6} key={photo.id}>
+                                                        <figure className="image-figure">
+                                                            <img
+                                                                src={photo.url}
+                                                                alt={`Project visual ${photo.id}`}
+                                                                className="content-image"
+                                                            />
+                                                        </figure>
+                                                    </Grid>
+                                                );
+                                            }
+                                            return null;
+                                        })}
+                                    </Grid>
+                                </div>
+                            )}
+                        </section>
+                    ))}
+                </div>
+
+                {/* Author Section */}
+                <section className="author-section">
+                    <Typography variant="h3" className="section-title">
+                        About the Authors
+                    </Typography>
+                    <div className="authors-grid">
+                        {project.authors.map(author => (
+                            <div key={author.name} className="author-card">
+                                <Avatar 
+                                    src={author.avatarUrl || '/default-avatar.jpg'} 
+                                    alt={author.name}
+                                    className="author-avatar"
+                                />
+                                <div className="author-info">
+                                    <Typography variant="h4" className="author-name">
+                                        {author.name}
+                                    </Typography>
+                                    <Typography variant="body2" className="author-email">
+                                        {author.email}
+                                    </Typography>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
+                {/* Comments Section */}
+                <section className="comments-section">
+                    <Typography variant="h3" className="section-title">
+                        Discussion
+                    </Typography>
+                    
+                    <div className="comment-form">
                         <TextField
-                            label="Add a Comment"
+                            label="Add to the discussion"
                             variant="outlined"
                             fullWidth
+                            multiline
+                            rows={3}
                             value={newComment}
                             onChange={(e) => setNewComment(e.target.value)}
-                            InputProps={{
-                                style: {
-                                    fontSize: '25px', // Increase font size as needed
-                                    color: 'var(--textColor)', // Set input text color
-                                },
-                            }}
+                            className="comment-input"
                         />
+                        <Button 
+                            onClick={handlePostComment}
+                            variant="contained"
+                            className="submit-comment"
+                        >
+                            Post Comment
+                        </Button>
+                    </div>
 
-                        <Button onClick={handlePostComment} sx={{ mt: 1 }}>Post Comment</Button>
-                    </Box>
-
-                    {editingCommentId && (
-                        <Box sx={{ marginTop: 2 }}>
-                            <TextField
-                                label="Edit Comment"
-                                variant="outlined"
-                                fullWidth
-                                value={editingCommentContent}
-                                onChange={(e) => setEditingCommentContent(e.target.value)}
-                            />
-                            <Button onClick={handleUpdateComment} variant="contained" color="primary" sx={{ marginTop: 1 }}>Update Comment</Button>
-                        </Box>
-                    )}
-
-                    <ul className="comment-list">
-                        {comments.map(comment => (
-                            <li key={comment.id} className="single-comment">
-                                <Avatar src={comment.user?.avatar || 'default-avatar.jpg'} alt={comment.user?.name} />
-                                <div>
-                                    <strong>{comment.user?.name || 'Anonymous'}</strong>
-                                    <span>{new Date(comment.createdAt).toLocaleTimeString()}</span>
-                                    <p>{comment.content}</p>
-                                    <div>
-                                        <Button onClick={() => handleReplyToComment(comment.id)}>Reply</Button>
-                                        <Button onClick={() => handleEditComment(comment)}>Edit</Button>
-                                        <Button onClick={() => handleDeleteComment(comment.id)}>Delete</Button>
-                                        <Button onClick={() => toggleReplies(comment.id)}>
-                                            {showReplies[comment.id] ? 'Hide Replies' : 'View Replies'}
-                                        </Button>
-                                    </div>
-                                </div>
-
-                                {showReplies[comment.id] && (
-                                    <List>
-                                        {comments.filter(c => c.parentId === comment.id).map(reply => (
-                                            <ListItem key={reply.id}>
-                                                <ListItemText primary={reply.content} />
-                                                <Button onClick={() => handleEditComment(reply)}>Edit</Button>
-                                                <Button onClick={() => handleDeleteComment(reply.id)}>Delete</Button>
-                                            </ListItem>
-                                        ))}
-                                    </List>
-                                )}
-
-                                {replyToCommentId === comment.id && (
-                                    <Box sx={{ mt: 2 }}>
-                                        <TextField
-                                            label="Reply"
-                                            variant="outlined"
-                                            fullWidth
-                                            value={replyContent}
-                                            onChange={(e) => setReplyContent(e.target.value)}
+                    <div className="comments-list">
+                        {comments.map((comment) => (
+                            <div key={comment.id} className="comment-thread">
+                                <div className="comment">
+                                    <div className="comment-header">
+                                        <Avatar 
+                                            src={comment.author?.avatarUrl || '/default-avatar.jpg'}
+                                            alt={comment.author?.name}
+                                            className="comment-avatar"
                                         />
-                                        <Button onClick={handlePostReply} sx={{ mt: 1 }}>Post Reply</Button>
-                                    </Box>
-                                )}
-                            </li>
-                        ))}
-                    </ul>
-                </Container>
-                <Footer />
+                                        <div className="comment-meta">
+                                            <Typography variant="subtitle1" className="comment-author">
+                                                {comment.author?.name || 'Anonymous'}
+                                            </Typography>
+                                            <Typography variant="caption" className="comment-date">
+                                                {new Date(comment.createdAt).toLocaleString()}
+                                            </Typography>
+                                        </div>
+                                    </div>
+                                    
+                                    {editingCommentId === comment.id ? (
+                                        <div className="edit-comment-form">
+                                            <TextField
+                                                fullWidth
+                                                multiline
+                                                rows={3}
+                                                value={editingCommentContent}
+                                                onChange={(e) => setEditingCommentContent(e.target.value)}
+                                                className="edit-comment-input"
+                                            />
+                                            <div className="edit-comment-actions">
+                                                <Button 
+                                                    onClick={handleUpdateComment}
+                                                    variant="contained"
+                                                    color="primary"
+                                                >
+                                                    Save Changes
+                                                </Button>
+                                                <Button 
+                                                    onClick={() => {
+                                                        setEditingCommentId(null);
+                                                        setEditingCommentContent('');
+                                                    }}
+                                                    variant="outlined"
+                                                    color="secondary"
+                                                >
+                                                    Cancel
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <Typography variant="body1" className="comment-content">
+                                                {comment.content}
+                                            </Typography>
 
-            </StyleProvider>
+                                            <div className="comment-actions">
+                                                <Button 
+                                                    onClick={() => handleReplyToComment(comment.id)}
+                                                    variant="text"
+                                                    color="primary"
+                                                >
+                                                    Reply
+                                                </Button>
+                                                <Button 
+                                                    onClick={() => handleToggleReplies(comment.id)}
+                                                    variant="text"
+                                                    color="primary"
+                                                >
+                                                    {showReplies[comment.id] ? 'Hide Replies' : 'Show Replies'}
+                                                </Button>
+                                                
+                                                    <>
+                                                        <Button 
+                                                            onClick={() => handleEditComment(comment)}
+                                                            variant="text"
+                                                            color="primary"
+                                                        >
+                                                            Edit
+                                                        </Button>
+                                                        <Button 
+                                                            onClick={() => handleDeleteComment(comment.id)}
+                                                            variant="text"
+                                                            color="error"
+                                                        >
+                                                            Delete
+                                                        </Button>
+                                                    </>
+                                                
+                                            </div>
+                                        </>
+                                    )}
+                                    {replyToCommentId === comment.id && (
+                                        <div className="reply-form">
+                                            <TextField
+                                                label="Write a reply"
+                                                variant="outlined"
+                                                fullWidth
+                                                value={replyContent}
+                                                onChange={(e) => setReplyContent(e.target.value)}
+                                                className="reply-input"
+                                            />
+                                            <div className="reply-actions">
+                                                <Button 
+                                                    onClick={handlePostReply}
+                                                    variant="contained"
+                                                >
+                                                    Post Reply
+                                                </Button>
+                                                <Button 
+                                                    onClick={() => setReplyToCommentId(null)}
+                                                    variant="outlined"
+                                                >
+                                                    Cancel
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {showReplies[comment.id] && replies[comment.id] && (
+                                        <div className="replies-list">
+                                            {replies[comment.id].map((reply) => (
+                                                <div key={reply.id} className="reply">
+                                                    <div className="reply-header">
+                                                        <Avatar 
+                                                            src={reply.author?.avatarUrl || '/default-avatar.jpg'}
+                                                            alt={reply.author?.name}
+                                                            className="reply-avatar"
+                                                        />
+                                                        <div className="reply-meta">
+                                                            <Typography variant="subtitle2" className="reply-author">
+                                                                {reply.author?.name || 'Anonymous'}
+                                                            </Typography>
+                                                            <Typography variant="caption" className="reply-date">
+                                                                {new Date(reply.createdAt).toLocaleString()}
+                                                            </Typography>
+                                                        </div>
+                                                    </div>
+                                                    <Typography variant="body2" className="reply-content">
+                                                        {reply.content}
+                                                    </Typography>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            </article>
+
+            <BoxAi />
+            <Footer />
         </div>
-            
-        </>
     );
 };
 

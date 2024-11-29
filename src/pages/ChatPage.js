@@ -3,141 +3,92 @@ import {
     useEffect,
     useRef,
     useCallback,
-    useLayoutEffect,
 } from 'react';
-import { BiTrash, BiPlus, BiUser, BiSend, BiSolidUserCircle } from 'react-icons/bi';
-import { MdOutlineArrowLeft, MdOutlineArrowRight } from 'react-icons/md';
+import { 
+    BiTrash, 
+    BiPlus, 
+    BiSend, 
+    BiSolidUserCircle, 
+    BiX,
+    BiMenu,
+    BiHistory
+} from 'react-icons/bi';
 import '../css/ChatPage.css';
 import {
-    Button, MenuItem, IconButton, Avatar, Menu
+    IconButton, 
+    Avatar
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import avatar from '../img/DALL·E 2024-11-19 05.35.3.png';
 
 const api = axios.create({
-    baseURL: 'http://graduationshowcase.online/api/v1',
+    baseURL: 'https://graduationshowcase.online/api/v1',
     headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`
     }
 });
 
-function ChatPage() {
+function ChatPage({ onClose }) {
     const [text, setText] = useState('');
     const [messages, setMessages] = useState([]);
-    const [previousChats, setPreviousChats] = useState([]);
-    const [currentChatId, setCurrentChatId] = useState(null);
     const [isResponseLoading, setIsResponseLoading] = useState(false);
     const [errorText, setErrorText] = useState('');
-    const [isShowSidebar, setIsShowSidebar] = useState(false);
-    const scrollToLastItem = useRef(null);
-    const [user, setUser] = useState({
-        avatar: '',
-        name: '',
-        email: '',
-    });
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const navigate = useNavigate();
-    const [anchorEl, setAnchorEl] = useState(null);
     const [isTyping, setIsTyping] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [chatHistory, setChatHistory] = useState([]);
+    const [currentChatId, setCurrentChatId] = useState(null);
+    const scrollToLastItem = useRef(null);
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            setUser({
-                avatar: localStorage.getItem('avatar'),
-                name: localStorage.getItem('name'),
-                email: localStorage.getItem('email'),
-            });
-            setIsLoggedIn(true);
-        } else {
-            setIsLoggedIn(false);
-        }
-    }, []);
-
-    // Fetch previous chats on mount
-    useEffect(() => {
-        const fetchChats = async () => {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                setErrorText('User not authenticated.');
-                return;
-            }
-
+        // Fetch chat history
+        const fetchChatHistory = async () => {
             try {
                 const response = await api.get('/chats');
-                setPreviousChats(
-                    Array.isArray(response.data.data) ? response.data.data.map(chat => ({
-                        ...chat,
-                        id: chat.id,
-                    })) : []
-                );
+                setChatHistory(response.data.data || []);
             } catch (error) {
-                setErrorText('Failed to load chat history.');
-                setPreviousChats([]);
+                console.error('Failed to fetch chat history:', error);
             }
         };
-
-        fetchChats();
+        fetchChatHistory();
     }, []);
 
-    // Fetch messages for the selected chat
-    useEffect(() => {
-        const fetchMessages = async () => {
-            if (!currentChatId) return;
-    
-            try {
-                const response = await api.get(`/chats/${currentChatId}/messages`);
-                if (response.data && response.data.data) {
-                    const formattedMessages = response.data.data.map((msg) => {
-                        if (msg.sender === 'assistant') {
-                            // Apply `formatMessageContent` to each AI message
-                            return { ...msg, content: formatMessageContent(msg.content) };
-                        }
-                        return msg;
-                    });
-                    setMessages(formattedMessages);
-                } else {
-                    setErrorText('No messages found.');
-                }
-            } catch (error) {
-                setErrorText('Failed to load messages.');
-                setMessages([]);
-            }
-        };
-    
-        fetchMessages();
-    }, [currentChatId]);    
-
-    const handleAvatarClick = (event) => {
-        setAnchorEl(event.currentTarget);
-    };
-
-    const handleMenuClose = () => {
-        setAnchorEl(null);
-    };
-
-    const handleLogout = () => {
-        localStorage.clear();
-        window.location.href = '/';
+    const toggleSidebar = () => {
+        setIsSidebarOpen(!isSidebarOpen);
     };
 
     const createNewChat = () => {
         setMessages([]);
-        setText('');
         setCurrentChatId(null);
+        setText('');
     };
 
-    const backToHistoryPrompt = (chatId) => {
-        setCurrentChatId(chatId);
-        setText(''); // Clear the text input
+    const loadChatHistory = async (chatId) => {
+        try {
+            const response = await api.get(`/chats/${chatId}/messages`);
+            setMessages(response.data.data || []);
+            setCurrentChatId(chatId);
+        } catch (error) {
+            console.error('Failed to load chat:', error);
+        }
     };
 
-    const toggleSidebar = useCallback(() => {
-        setIsShowSidebar((prev) => !prev);
-    }, []);
+    const deleteChat = async (chatId, e) => {
+        e.stopPropagation();
+        if (window.confirm('Are you sure you want to delete this chat?')) {
+            try {
+                await api.delete(`/chats/${chatId}`);
+                setChatHistory(prev => prev.filter(chat => chat.id !== chatId));
+                if (currentChatId === chatId) {
+                    setMessages([]);
+                    setCurrentChatId(null);
+                }
+            } catch (error) {
+                console.error('Failed to delete chat:', error);
+            }
+        }
+    };
 
     const submitHandler = useCallback(async (e) => {
-        debugger;
         e.preventDefault();
         if (!text || isResponseLoading) return;
     
@@ -146,246 +97,154 @@ function ChatPage() {
         setIsTyping(true);
     
         try {
-            let newChatId = currentChatId;
-    
-            if (!currentChatId) {
-                const chatResponse = await api.post('/chats', { content: text });
-                if (chatResponse.data && chatResponse.data.chat && chatResponse.data.chat.id) {
-                    newChatId = chatResponse.data.chat.id;
-                    setCurrentChatId(newChatId);
-                    setPreviousChats((prev) => [
-                        ...prev,
-                        { id: newChatId, title: chatResponse.data.chat.title },
-                    ]);
-                } else {
-                    setErrorText('Failed to create a new chat.');
-                    return;
-                }
-            } else {
-                await api.post(`/chats/${newChatId}/messages`, {
-                    content: text,
-                });
-            }
-    
-            const response = await api.get(`/chats/${newChatId}/messages`);
-            const formattedMessages = response.data.data.map((msg) => {
-                if (msg.sender === 'assistant') {
-                    // Apply `formatMessageContent` to each AI message
-                    return { ...msg, content: formatMessageContent(msg.content) };
-                }
-                return msg;
-            });
-            setMessages(formattedMessages);
+            // Add user message immediately
+            const userMessage = {
+                sender: 'user',
+                content: text,
+                id: Date.now()
+            };
+            setMessages(prev => [...prev, userMessage]);
+            
+            // Simulate AI response (replace with your actual API call)
+            setTimeout(() => {
+                const aiMessage = {
+                    sender: 'assistant',
+                    content: 'This is a sample response. Replace with actual API integration.',
+                    id: Date.now() + 1
+                };
+                setMessages(prev => [...prev, aiMessage]);
+                setIsResponseLoading(false);
+                setIsTyping(false);
+            }, 1000);
+            
             setText('');
         } catch (error) {
-            setErrorText('Failed to create chat or message.');
-        } finally {
+            setErrorText('Failed to send message.');
             setIsResponseLoading(false);
             setIsTyping(false);
         }
-    }, [currentChatId, text, isResponseLoading]);    
-    
+    }, [text, isResponseLoading]);
 
-    useLayoutEffect(() => {
-        const handleResize = () => {
-            setIsShowSidebar(window.innerWidth <= 640);
-        };
-        handleResize();
-
-        window.addEventListener('resize', handleResize);
-
-        return () => {
-            window.removeEventListener('resize', handleResize);
-        };
-    }, []);
-
-    const deleteChat = async (chatId) => {
-        if (!window.confirm('Are you sure you want to delete this chat?')) return;
-
-        try {
-            await api.delete(`/chats/${chatId}`);
-            setPreviousChats(prev => prev.filter(chat => chat.id !== chatId)); // Update local state
-            if (currentChatId === chatId) {
-                setCurrentChatId(null); // Reset current chat if deleted
-                setMessages([]); // Clear messages
-            }
-        } catch (error) {
-            setErrorText('Failed to delete chat.');
+    useEffect(() => {
+        if (scrollToLastItem.current) {
+            scrollToLastItem.current.scrollIntoView({ behavior: 'smooth' });
         }
-    };
+    }, [messages]);
 
-    const formatMessageContent = (content) => {
-        const colonIndex = content.indexOf(':');
-        const mainText = content.substring(0, colonIndex + 1);
-        const itemsText = content.substring(colonIndex + 1).trim();
-        const items = itemsText.split(/[\n*]/).filter(item => item.trim());
-        
-        const numberedItems = items.map((item, index) => `${index + 1}. ${item.trim()}`).join('\n');
-        return `${mainText}\n${numberedItems}`.replace(/\n/g, '<br />');
-    };
-    
-    
     return (
-        <div className='container chat-page'>
-            <section className={`sidebar ${isShowSidebar ? 'open' : ''}`}>
-                <div className='sidebar-header' onClick={createNewChat} role='button'>
-                    <BiPlus size={20} />
-                    <button>New Chat</button>
-                </div>
-                <div className='sidebar-history'>
-                    {previousChats.length > 0 && (
-                        <>
-                            <p>Ongoing</p>
-                            <ul>
-                                {previousChats.map(chat => (
-                                    <li key={chat.id}>
-                                        <span onClick={() => backToHistoryPrompt(chat.id)}>
-                                            {chat.title}
-                                        </span>
-                                        <IconButton
-                                            aria-label='delete'
-                                            onClick={() => deleteChat(chat.id)}
-                                        >
-                                            <BiTrash size={20} color='white' />
-                                        </IconButton>
-                                    </li>
-                                ))}
-                            </ul>
-                        </>
-                    )}
-                </div>
-                <div className='sidebar-info'>
-                    <div className='sidebar-info-user'>
-                        {isLoggedIn ? (
-                            <>
-                                <IconButton onClick={handleAvatarClick}>
-                                    <Avatar src={user.avatar} alt={user.name} />
-                                </IconButton>
-                                <Menu
-                                    anchorEl={anchorEl}
-                                    open={Boolean(anchorEl)}
-                                    onClose={handleMenuClose}
-                                >
-                                    <MenuItem onClick={handleMenuClose}>Name: {user.name}</MenuItem>
-                                    <MenuItem onClick={handleMenuClose}>Email: {user.email}</MenuItem>
-                                    <MenuItem onClick={handleLogout}>Logout</MenuItem>
-                                </Menu>
-                            </>
-                        ) : (
-                            <Button color="primary" variant="outlined" onClick={() => navigate('/')}>
-                                Login
-                            </Button>
-                        )}
-                    </div>
-                </div>
-            </section>
+        <div className="chat-container">
+            <button className="sidebar-toggle" onClick={toggleSidebar}>
+                <BiMenu size={24} />
+            </button>
 
-            <section className='main'>
-                {!currentChatId && (
-                    <div className='empty-chat-container'>
-                        <img
-                            src='https://aitoga.com/wp-content/uploads/2024/03/Claude-AI-logo.png'
-                            width={45}
-                            height={45}
-                            alt='ChatGPT'
-                        />
-                        <h1>AI Chat</h1>
-                        <h3>How can I help you today?</h3>
+            <div className={`sidebar ${!isSidebarOpen ? 'collapsed' : ''}`}>
+                <div className="chat-history">
+                    <h4>Chat History</h4>
+                    <div 
+                        className="history-item" 
+                        onClick={createNewChat}
+                        style={{ backgroundColor: '#3a3b3c' }}
+                    >
+                        <span><BiPlus size={16} style={{ marginRight: '8px' }} />New Chat</span>
                     </div>
-                )}
+                    {chatHistory.map((chat) => (
+                        <div 
+                            key={chat.id} 
+                            className="history-item"
+                            onClick={() => loadChatHistory(chat.id)}
+                        >
+                            <span><BiHistory size={16} style={{ marginRight: '8px' }} />{chat.title}</span>
+                            <IconButton
+                                size="small"
+                                onClick={(e) => deleteChat(chat.id, e)}
+                                style={{ color: '#e4e6eb' }}
+                            >
+                                <BiTrash size={16} />
+                            </IconButton>
+                        </div>
+                    ))}
+                </div>
+            </div>
 
-                {isShowSidebar ? (
-                    <MdOutlineArrowRight
-                        className='burger'
-                        size={28.8}
-                        onClick={toggleSidebar}
-                    />
-                ) : (
-                    <MdOutlineArrowLeft
-                        className='burger'
-                        size={28.8}
-                        onClick={toggleSidebar}
-                    />
-                )}
-                <div className="main-header">
-                    <header className="chat-header">
-                        {/* You can add a header or any title if needed */}
-                    </header>
-                    <div className="messages-container">
-                        {messages.length > 0 ? (
-                            messages.map((msg, index) => (
-                                <div key={index} className={`message ${msg.sender === 'user' ? 'user-message' : 'ai-message'}`}>
-                                    <div className="message-wrapper">
-                                        {msg.sender === 'user' ? (
-                                            <BiSolidUserCircle size={28.8} />
-                                        ) : (
-                                            <img
-                                                src="https://aitoga.com/wp-content/uploads/2024/03/Claude-AI-logo.png"
-                                                alt="AI Logo"
-                                                className="ai-avatar"
-                                                width={35}
-                                                height={35}
-                                            />
-                                        )}
-                                        <div>
-                                            <p className='role-title'>{msg.sender === 'user' ? 'You' : 'AI chat'}</p>
-                                            <p dangerouslySetInnerHTML={{ __html: msg.content }}></p>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <p>No messages yet.</p>
-                        )}
-                        {/* Show typing indicator */}
-                        {isTyping && (
-                            <div className="message ai-message">
+            <div className="chat-content">
+                <div className="chat-header">
+                    <h3>Chat</h3>
+                    <IconButton onClick={onClose} size="small" style={{ color: '#e4e6eb' }}>
+                        <BiX size={24} />
+                    </IconButton>
+                </div>
+
+                <div className="messages-container">
+                    {messages.length > 0 ? (
+                        messages.map((msg, index) => (
+                            <div key={index} className={`message ${msg.sender === 'user' ? 'user-message' : 'ai-message'}`}>
                                 <div className="message-wrapper">
-                                    <img
-                                        src="https://aitoga.com/wp-content/uploads/2024/03/Claude-AI-logo.png"
-                                        alt="AI Logo"
-                                        className="ai-avatar"
-                                        width={35}
-                                        height={35}
-                                    />
-                                    <div>
-                                        <p className='role-title'>AI chat</p>
-                                        <p className="typing-indicator">Typing...</p>
+                                    {msg.sender === 'user' ? (
+                                        <Avatar sx={{ width: 28, height: 28 }}>
+                                            <BiSolidUserCircle size={20} />
+                                        </Avatar>
+                                    ) : (
+                                        <Avatar 
+                                            src={avatar}
+                                            alt="AI Logo"
+                                            className="ai-avatar"
+                                            sx={{ width: 28, height: 28 }}
+                                        />
+                                    )}
+                                    <div className="message-content">
+                                        <p>{msg.content}</p>
                                     </div>
                                 </div>
                             </div>
-                        )}
-                        <div ref={scrollToLastItem} />
-                    </div>
+                        ))
+                    ) : (
+                        <div className='empty-chat-container'>
+                            <Avatar 
+                                src={avatar}
+                                alt="AI Logo"
+                                sx={{ width: 60, height: 60, mb: 2 }}
+                            />
+                            <h1>Welcome to AI Chat</h1>
+                            <p>Start a conversation by typing a message below</p>
+                        </div>
+                    )}
+                    {isTyping && (
+                        <div className="message ai-message">
+                            <div className="message-wrapper">
+                                <Avatar 
+                                    src={avatar}
+                                    alt="AI Logo"
+                                    className="ai-avatar"
+                                    sx={{ width: 28, height: 28 }}
+                                />
+                                <div className="typing-indicator">
+                                    <div className="typing-dot"></div>
+                                    <div className="typing-dot"></div>
+                                    <div className="typing-dot"></div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    <div ref={scrollToLastItem} />
                 </div>
 
                 <div className='main-bottom'>
-                        {errorText && <p className='errorText'>{errorText}</p>}
-                        {errorText && (
-                            <p id='errorTextHint'>
-                                *Nothing Just error.
-                            </p>
-                        )}
-                        
-                        <form className='form-container' onSubmit={submitHandler}>
-                            <input
-                                type='text'
-                                placeholder='Send a message.'
-                                spellCheck='false'
-                                value={isResponseLoading ? 'Processing...' : text}
-                                onChange={(e) => setText(e.target.value)}
-                                readOnly={isResponseLoading}
-                            />
-                            <button type='submit' disabled={isResponseLoading}>
-                                <BiSend size={20} />
-                            </button>
-                        </form>
-                        <p>
-                            Chat can make mistakes. Consider checking important
-                            information.
-                        </p>
+                    {errorText && <p className='errorText'>{errorText}</p>}
+                    <form className='form-container' onSubmit={submitHandler}>
+                        <input
+                            type='text'
+                            placeholder='Send a message...'
+                            spellCheck='false'
+                            value={isResponseLoading ? 'Processing...' : text}
+                            onChange={(e) => setText(e.target.value)}
+                            readOnly={isResponseLoading}
+                        />
+                        <button type='submit' disabled={isResponseLoading}>
+                            <BiSend size={20} />
+                        </button>
+                    </form>
                 </div>
-            </section>
+            </div>
         </div>
     );
 }

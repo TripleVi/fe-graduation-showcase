@@ -11,7 +11,7 @@ import Footer from "../pages/Footer";
 import ChatBox from "../pages/ChatBox";
 // Create axios instance
 // const api = axios.create({
-//     baseURL: 'http://graduationshowcase.online/api/v1',
+//     baseURL: 'https://graduationshowcase.online/api/v1',
 //     headers: {
 //         Authorization: `Bearer ${localStorage.getItem('token')}`
 //     }
@@ -36,8 +36,8 @@ const UserHomePage = () => {
     };
 
     return (
-        <div className={isDark ? "dark-mode" : null}>
-          <StyleProvider value={{ isDark: isDark, changeTheme: changeTheme }}>
+        <div className= "user-home">
+          {/* <StyleProvider value={{ isDark: isDark, changeTheme: changeTheme }}> */}
             {splashVisible ? (
               <SplashScreen />
             ) : (
@@ -50,7 +50,7 @@ const UserHomePage = () => {
                 <Footer />
               </div>
             )}
-          </StyleProvider>
+          {/* </StyleProvider> */}
         </div>
       );
 };

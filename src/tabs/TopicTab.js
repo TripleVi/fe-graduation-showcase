@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
     IconButton, Box, Grid, Dialog, DialogTitle,
-    DialogActions, Button, Select, MenuItem, TextField
+    DialogActions, Button, Select, MenuItem, TextField, Snackbar, Alert
 } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
 import { DataGrid } from '@mui/x-data-grid'; // Import from MUI for table
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://graduationshowcase.online/api/v1',
+    baseURL: 'https://graduationshowcase.online/api/v1',
     headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}` // Token from localStorage
     }
@@ -29,6 +29,13 @@ const TopicTab = () => {
     const [itemToEdit, setItemToEdit] = useState(null);
     const [selectedMajor, setSelectedMajor] = useState('');
     const [formValues, setFormValues] = useState({ name: '', majorId: '' });
+    const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+
+    const handleSnackbarClose = () => {
+        setOpenSnackbar(false);
+    };
 
     useEffect(() => {
         fetchMajors();
@@ -61,8 +68,16 @@ const TopicTab = () => {
 
     const handleDelete = async () => {
         try {
-            await api.delete(`/topics/${itemToDelete}`);
-            fetchTopics(); // Refresh the topics list after deletion
+            if (itemToDelete) {
+                await api.delete(`/topics/${itemToDelete}`);
+                setSnackbarMessage('Topic deleted successfully');
+                setSnackbarSeverity('success');
+                setOpenSnackbar(true);
+                setData((prevData) => ({
+                    ...prevData,
+                    topics: prevData.topics.filter((topic) => topic.id !== itemToDelete)
+                }));
+            }
             setOpenConfirm(false);
         } catch (error) {
             console.error('Error deleting item:', error);
@@ -102,32 +117,60 @@ const TopicTab = () => {
             if (isEditing) {
                 // Update logic
                 await api.put(`/topics/${itemToEdit.id}`, { name: formValues.name });
+                setSnackbarMessage('Topic updated successfully');
+                setSnackbarSeverity('success');
+                // Update the topic directly in the state
+                setData((prevData) => ({
+                    ...prevData,
+                    topics: prevData.topics.map(topic => 
+                        topic.id === itemToEdit.id ? { ...topic, name: formValues.name } : topic
+                    )
+                }));
             } else {
                 // Create logic
-                await api.post(`/majors/${formValues.majorId}/topics`, { name: formValues.name });
+                const response = await api.post(`/majors/${formValues.majorId}/topics`, { name: formValues.name });
+                // Add the new topic to the state
+                setData((prevData) => ({
+                    ...prevData,
+                    topics: [response.data.data, ...prevData.topics], // Add new topic at the start of the list
+                }));
             }
+            setOpenSnackbar(true);
             fetchTopics();
-            setOpenForm(false);
+            setOpenForm(false); // Close the form
         } catch (error) {
+            setSnackbarMessage('Error saving major');
+            setSnackbarSeverity('error');
+            setOpenSnackbar(true);
             console.error('Error saving item:', error);
         }
     };
+    
 
     return (
         <Box sx={{ display: 'flex' }}>
             <Grid item xs={12}>
-                <Select value={selectedMajor} onChange={handleMajorChange} displayEmpty>
+                {/* <Select value={selectedMajor} onChange={handleMajorChange} displayEmpty>
                     <MenuItem value="">
                         <em>Select Major</em>
                     </MenuItem>
                     {data.majors.map((major) => (
                         <MenuItem key={major.id} value={major.id}>{major.name}</MenuItem>
                     ))}
-                </Select>
+                </Select> */}
                 <DataGrid
-                    rows={data.topics}
+                    rows={data.topics.map((topic, index) => ({
+                        ...topic,
+                        no: index + 1,  // Tính số thứ tự (index + 1)
+                    }))}
                     columns={[
-                        { field: 'id', headerName: 'ID', width: 90 },
+                        
+                        {
+                            field: 'no',
+                            headerName: 'No.',
+                            width: 90,
+                            renderCell: (params) => <span>{params.row.no}</span>,  // Hiển thị số thứ tự
+                        },
                         { field: 'name', headerName: 'Name', width: 200 },
                         {
                             field: 'actions',
@@ -187,6 +230,19 @@ const TopicTab = () => {
                     <Button onClick={handleDelete}>Delete</Button>
                 </DialogActions>
             </Dialog>
+            <Snackbar
+                open={openSnackbar}
+                autoHideDuration={3000}
+                onClose={handleSnackbarClose}
+            >
+                <Alert
+                    onClose={handleSnackbarClose}
+                    severity={snackbarSeverity}
+                    sx={{ width: '100%' }}
+                >
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };

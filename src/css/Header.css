@@ -1,37 +1,36 @@
 @import "../_globalColor.css";
 
-/*React-headroom*/
 .headroom-wrapper {
   max-height: 100px;
 }
 
-/* header */
-
-.dark-menu {
-  background-color: var(--darkBackground) !important;
-  color: var(--textColorDark);
-}
-
-.dark-menu li a {
-  color: var(--textColorDark) !important;
-}
-
-.dark-menu li a:hover {
-  background-color: var(--buttonColor) !important;
-}
-
 .header {
-  background-color: var(--lightBackground1);
+  background: linear-gradient(to right, var(--lightBackground1), var(--lightBackground2));
   max-width: 100%;
-  padding: 15px 20px;
+  padding: 12px 24px;
   margin: 0px auto;
+  box-shadow: 0 2px 15px var(--lightBoxShadow);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+
+.header:hover {
+  box-shadow: 0 4px 20px var(--lightBoxShadowDark);
 }
 
 .header ul {
   margin: 0;
   padding: 0;
   list-style: none;
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.header li {
+  margin: 0 8px;
 }
 
 .grey-color {
@@ -40,148 +39,124 @@
 
 .header li a {
   display: block;
-  padding: 15px 20px;
+  padding: 10px 15px;
   color: var(--textColor);
   text-decoration: none;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  font-weight: 500;
 }
 
 .header li a:hover,
 .header .menu-btn:hover {
   background-color: var(--headerHoverBG);
+  transform: translateY(-2px);
 }
 
 .header .logo {
-  display: block;
-  flex: none;
+  display: flex;
+  align-items: center;
   float: left;
-  font-size: 1.5em;
   text-decoration: none;
-  margin-top: 10px;
-  line-height: normal;
+  margin: 0;
+  padding: 0;
+  transition: transform 0.3s ease;
+}
+
+.header .logo:hover {
+  transform: scale(1.05);
 }
 
 .header .logo img {
-    width: 200px; /* Adjust the size as needed */
-    height: auto;
-  }
-
-.header .logo-name {
-  font-family: "Agustina Regular";
-  font-weight: bold;
-  font-variant-ligatures: no-common-ligatures;
-  -webkit-font-variant-ligatures: no-common-ligatures;
-  padding: 0 10px;
+  width: 160px;
+  height: auto;
+  object-fit: contain;
 }
-
-/* menu */
 
 .header .menu {
-  clear: both;
-  max-height: 0;
-  transition: max-height 0.2s ease-out;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  position: absolute;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
-/* menu icon */
-
-.header .menu-icon {
+/* Avatar and Menu Styling */
+.MuiAvatar-root {
   cursor: pointer;
-  display: inline-block;
-  /* float: right; */
-  padding: 28px 20px;
-  position: relative;
-  user-select: none;
+  transition: transform 0.2s ease;
+  border: 2px solid var(--buttonColor);
 }
 
-.header .menu-icon .navicon {
-  background: var(--iconBackground);
-  display: block;
-  height: 2px;
-  position: relative;
-  transition: background 0.2s ease-out;
-  width: 18px;
+.MuiAvatar-root:hover {
+  transform: scale(1.1);
 }
 
-.header .menu-icon .navicon-dark {
-  background: var(--textColorDark);
+.MuiMenuItem-root {
+  padding: 12px 24px !important;
+  min-width: 200px;
 }
 
-.header .menu-icon .navicon:before,
-.header .menu-icon .navicon:after {
-  background: var(--iconBackground);
-  content: "";
-  display: block;
-  height: 100%;
-  position: absolute;
-  transition: all 0.2s ease-out;
-  width: 100%;
+.login-button {
+  background-color: var(--buttonColor) !important;
+  color: white !important;
+  padding: 8px 24px !important;
+  border-radius: 25px !important;
+  text-transform: none !important;
+  font-size: 1rem !important;
+  transition: all 0.3s ease !important;
+  border: none !important;
 }
 
-.header .menu-icon .navicon-dark:before,
-.header .menu-icon .navicon-dark:after {
-  background: var(--textColorDark) !important;
-  content: "";
-  display: block;
-  height: 100%;
-  position: absolute;
-  transition: all 0.2s ease-out;
-  width: 100%;
+.login-button:hover {
+  background-color: var(--buttonHover) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px var(--lightBoxShadowDark);
 }
 
-.header .menu-icon .navicon:before {
-  top: 5px;
+/* Navigation Links */
+.nav-links {
+  display: flex;
+  align-items: center;
+  margin-left: 40px;
 }
 
-.header .menu-icon .navicon:after {
-  top: -5px;
+.nav-link {
+  color: var(--textColor);
+  text-decoration: none;
+  padding: 8px 16px;
+  margin: 0 5px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  font-weight: 500;
 }
 
-/* menu btn */
-
-.header .menu-btn {
-  display: none;
+.nav-link:hover {
+  background-color: var(--headerHoverBG);
+  transform: translateY(-2px);
 }
 
-.header .menu-btn:checked ~ .menu {
-  max-height: 486px;
-}
-
-.header .menu-btn:checked ~ .menu-icon .navicon {
-  background: transparent !important;
-}
-
-.header .menu-btn:checked ~ .menu-icon .navicon:before {
-  transform: rotate(-45deg);
-}
-
-.header .menu-btn:checked ~ .menu-icon .navicon:after {
-  transform: rotate(45deg);
-}
-
-.header .menu-btn:checked ~ .menu-icon:not(.steps) .navicon:before,
-.header .menu-btn:checked ~ .menu-icon:not(.steps) .navicon:after {
-  top: 0;
-}
-
-/* 48em = 768px */
-
-@media (min-width: 48em) {
-  .header li {
-    float: left;
-  }
+/* Responsive Design */
+@media (max-width: 768px) {
   .header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    padding: 10px 16px;
   }
-  .header .menu {
-    max-height: none;
+
+  .header .logo img {
+    width: 120px;
   }
-  .header .menu-icon {
+
+  .nav-links {
     display: none;
   }
-}
-@media (max-width: 960px) and (min-width: 768px) {
-  .header {
-    font-size: 12px;
+
+  .header .menu {
+    gap: 10px;
+  }
+
+  .MuiMenuItem-root {
+    min-width: 160px;
   }
 }

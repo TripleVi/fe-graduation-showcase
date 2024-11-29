@@ -5,9 +5,9 @@ import {greeting, splashScreen} from "../portfolio.js";
 import StyleContext from "../contexts/StyleContext.js";
 
 export default function SplashScreen() {
-  const {isDark} = useContext(StyleContext);
+  //const {isDark} = useContext(StyleContext);
   return (
-    <div className={isDark ? "dark-mode splash-container" : "splash-container"}>
+    <div className="splash-container">
       <div className="splash-animation-container">
         <DisplayLottie animationData={splashScreen.animation} />
       </div>

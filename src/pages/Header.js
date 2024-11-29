@@ -1,13 +1,13 @@
 import React, { useContext, useEffect, useState } from "react";
 import Headroom from "react-headroom";
 import "../css/Header.css";
-import ToggleSwitch from "../pages/ToggleSwitch";
-import StyleContext from "../contexts/StyleContext";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button, MenuItem, IconButton, Avatar, Menu } from '@mui/material';
+import HomeIcon from '@mui/icons-material/Home';
+import ProjectIcon from '@mui/icons-material/Assignment';
+import ChatIcon from '@mui/icons-material/Chat';
 
 function Header() {
-    const { isDark } = useContext(StyleContext);
     const [user, setUser] = useState({
         avatar: '',
         name: '',
@@ -19,12 +19,12 @@ function Header() {
     const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
-        setIsClient(true); // This ensures the component only renders on the client
+        setIsClient(true);
         const token = localStorage.getItem('token');
         if (token) {
             setIsLoggedIn(true);
             setUser({
-                avatar: localStorage.getItem('avatar'),
+                avatar: localStorage.getItem('avatar') || 'https://via.placeholder.com/40',
                 name: localStorage.getItem('name'),
                 email: localStorage.getItem('email'),
             });
@@ -41,49 +41,111 @@ function Header() {
 
     const handleLogout = () => {
         localStorage.clear();
-        window.location.href = '/';
+        window.location.href = '/login';
+    };
+
+    const handleNavigate = (path) => {
+        navigate(path);
+        handleMenuClose();
     };
 
     return (
         <Headroom>
-            <header className={isDark ? "dark-menu header" : "header"}>
-                <a href="/" className="logo">
-                    <img 
-                        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-mEZMcexBGVNOrE63UGvgHwppdXEl96XdiA&s" 
-                        alt="Logo"
-                        className="logo-image"
-                    />
-                </a>
-                <ul className={isDark ? "dark-menu menu" : "menu"}>
+            <header className="header">
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <Link to="/userhome" className="logo">
+                        <img 
+                            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-mEZMcexBGVNOrE63UGvgHwppdXEl96XdiA&s" 
+                            alt="Logo"
+                            className="logo-image"
+                        />
+                    </Link>
+                    
+                    {isLoggedIn && (
+                        <nav className="nav-links">
+                            <Link to="/" className="nav-link">
+                                <HomeIcon sx={{ mr: 1 }} />
+                                Home
+                            </Link>
+                            <Link to="/userhome" className="nav-link">
+                                <ProjectIcon sx={{ mr: 1 }} />
+                                Projects
+                            </Link>
+                            {/* <Link to="/chat" className="nav-link">
+                                <ChatIcon sx={{ mr: 1 }} />
+                                Chat
+                            </Link> */}
+                        </nav>
+                    )}
+                </div>
+
+                <div className="menu">
                     {isLoggedIn ? (
                         <>
-                            <IconButton onClick={handleAvatarClick}>
-                                <Avatar src={user.avatar} alt={user.name} />
+                            <IconButton 
+                                onClick={handleAvatarClick}
+                                sx={{ padding: 0 }}
+                            >
+                                <Avatar 
+                                    src={user.avatar} 
+                                    alt={user.name}
+                                    sx={{ 
+                                        width: 40, 
+                                        height: 40,
+                                    }}
+                                />
                             </IconButton>
                             {isClient && (
                                 <Menu
                                     anchorEl={anchorEl}
                                     open={Boolean(anchorEl)}
                                     onClose={handleMenuClose}
-                                    disableScrollLock={true} // This line prevents document errors
+                                    disableScrollLock={true}
+                                    PaperProps={{
+                                        elevation: 3,
+                                        sx: {
+                                            mt: 1.5,
+                                            borderRadius: 2,
+                                            minWidth: 200,
+                                        }
+                                    }}
                                 >
-                                    <MenuItem onClick={handleMenuClose}>Name: {user.name}</MenuItem>
-                                    <MenuItem onClick={handleMenuClose}>Email: {user.email}</MenuItem>
-                                    <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                                    <MenuItem 
+                                        onClick={() => handleNavigate('/profile')}
+                                        sx={{ 
+                                            borderBottom: '1px solid rgba(0,0,0,0.08)',
+                                            fontWeight: 'bold'
+                                        }}
+                                    >
+                                        {user.name}
+                                    </MenuItem>
+                                    <MenuItem 
+                                        onClick={() => handleNavigate('/profile')}
+                                        sx={{ color: 'text.secondary' }}
+                                    >
+                                        {user.email}
+                                    </MenuItem>
+                                    <MenuItem 
+                                        onClick={handleLogout}
+                                        sx={{ 
+                                            color: 'error.main',
+                                            mt: 1
+                                        }}
+                                    >
+                                        Logout
+                                    </MenuItem>
                                 </Menu>
                             )}
                         </>
                     ) : (
-                        <Button color="primary" variant="outlined" onClick={() => navigate('/')}>
+                        <Button 
+                            className="login-button"
+                            onClick={() => navigate('/')}
+                        >
                             Login
                         </Button>
                     )}
-                    <li>
-                        <a>
-                            <ToggleSwitch />
-                        </a>
-                    </li>
-                </ul>
+                </div>
             </header>
         </Headroom>
     );

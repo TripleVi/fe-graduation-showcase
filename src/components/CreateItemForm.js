@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button, MenuItem, Grid, IconButton } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button, MenuItem, Grid, Snackbar } from '@mui/material';
+// import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import axios from 'axios';
 
 const CreateItemForm = ({ open, handleClose, project, onCreate }) => {
     const [formData, setFormData] = useState({
         title: project?.title || '',
-        description: project?.description || [{ title: '', content: '' }],
+        description: project?.description || [{ title: '', content: '', fileIndex: null }],
         authors: [{ name: '', email: '', avatar: null }],
         photos: [],
         report: null,
@@ -17,9 +17,11 @@ const CreateItemForm = ({ open, handleClose, project, onCreate }) => {
     });
 
     const [topics, setTopics] = useState([]);
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
 
     const api = axios.create({
-        baseURL: 'http://graduationshowcase.online/api/v1',
+        baseURL: 'https://graduationshowcase.online/api/v1',
         headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -48,7 +50,7 @@ const CreateItemForm = ({ open, handleClose, project, onCreate }) => {
         if (project) {
             setFormData({
                 title: project.title || '',
-                description: project.description || [{ title: '', content: '' }],
+                description: project.description || [{ title: '', content: '', fileIndex: null }],
                 authors: project.authors || [{ name: '', email: '', avatar: null }],
                 photos: [],
                 report: null,
@@ -84,7 +86,7 @@ const CreateItemForm = ({ open, handleClose, project, onCreate }) => {
     const handleAddDescription = () => {
         setFormData({
             ...formData,
-            description: [...formData.description, { title: '', content: '' }],
+            description: [...formData.description, { title: '', content: '', fileIndex: null }],
         });
     };
 
@@ -102,65 +104,13 @@ const CreateItemForm = ({ open, handleClose, project, onCreate }) => {
         });
     };
 
-    // const handleSubmit = async (e) => {
-    //     e.preventDefault();
-    //     const { title, description, year, topicId, hashtags, authors, photos, report } = formData;
-    
-    //     const projectData = {
-    //         title,
-    //         description,
-    //         year,
-    //         topicId,
-    //         hashtags: hashtags.split(',').map(tag => tag.trim()),
-    //         authors: authors.map((author, index) => ({
-    //             name: author.name.trim(),
-    //             email: author.email.trim() || `author@example.com`,
-    //             fileIndex: author.avatar ? index : null,  // Include the fileIndex if avatar is provided
-    //         })),
-    //     };
-    
-    //     const form = new FormData();
-    //     form.append('project', JSON.stringify(projectData));
-    
-    //     // Append multiple photos
-    //     if (photos.length > 0) {
-    //         photos.forEach((photo) => {
-    //             form.append('photos', photo);
-    //         });
-    //     }
-    
-    //     // Append report
-    //     if (report) {
-    //         form.append('report', report);
-    //     }
-    
-    //     // Append avatars for authors with unique keys
-    //     authors.forEach((author, index) => {
-    //         if (author.avatar) {
-    //             form.append('avatars', author.avatar); // Remove the index part
-    //         }
-    //     });
-    
-    //     try {
-    //         if (project) {
-    //             await api.put(`/projects/${project.id}`, form, {
-    //                 headers: { 'Content-Type': 'multipart/form-data' },
-    //             });
-    //         } else {
-    //             await api.post('/projects', form, {
-    //                 headers: { 'Content-Type': 'multipart/form-data' },
-    //             });
-    //         }
-    
-    //         onCreate();
-    //         handleClose();
-    //     } catch (error) {
-    //         console.error('Error creating/updating project:', error);
-    //     }
-    // };    
-
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!formData.title || !formData.year || !formData.topicId || formData.authors.some(author => !author.name || !author.email)) {
+            setSnackbarMessage('Please fill all required sections.');
+            setSnackbarOpen(true);
+            return;
+        }
         const { title, description, year, topicId, hashtags, authors, photos, report } = formData;
     
         const projectData = {
@@ -196,24 +146,32 @@ const CreateItemForm = ({ open, handleClose, project, onCreate }) => {
         });
     
         try {
+            let response;
             if (project) {
-                await api.put(`/projects/${project.id}`, form, {
+                // Cập nhật project
+                response = await api.put(`/projects/${project.id}`, form, {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 });
             } else {
-                await api.post('/projects', form, {
+                // Tạo mới project
+                response = await api.post('/projects', form, {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 });
             }
+            setSnackbarMessage(project ? 'Project updated successfully!' : 'Project created successfully!');
+            setSnackbarOpen(true); // Mở Snackbar khi tạo thành công
     
-            onCreate();
+            // Cập nhật state của HomePage bằng cách truyền dữ liệu project mới
+            onCreate(response.data.data); // Cập nhật project mới vào bảng ngay lập tức
+    
             handleClose();
         } catch (error) {
             console.error('Error creating/updating project:', error);
         }
-    };    
-
+    };
+    
     return (
+        <>
         <Dialog open={open} onClose={handleClose}>
             <DialogTitle>{project ? 'Edit Project' : 'Create New Project'}</DialogTitle>
             <DialogContent>
@@ -250,6 +208,24 @@ const CreateItemForm = ({ open, handleClose, project, onCreate }) => {
                                 variant="outlined"
                                 style={{ maxHeight: 200, overflowY: 'auto' }}
                             />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <input
+                                type="file"
+                                name={`description.${index}.photo`}
+                                accept="image/*"
+                                onChange={(e) => {
+                                    const photo = e.target.files[0];
+                                    const newDescription = [...formData.description];
+                                    newDescription[index].fileIndex = formData.photos.length;
+                                    setFormData({
+                                        ...formData,
+                                        description: newDescription,
+                                        photos: [...formData.photos, photo],
+                                    });
+                                }}
+                            />
+                            <label>Photo </label>
                         </Grid>
                     </Grid>
                 ))}
@@ -341,16 +317,6 @@ const CreateItemForm = ({ open, handleClose, project, onCreate }) => {
                     <Grid item xs={6}>
                         <input
                             type="file"
-                            name="photos"
-                            accept="image/*"
-                            multiple
-                            onChange={handleChange}
-                        />
-                        <label>Photos: File</label>
-                    </Grid>
-                    <Grid item xs={6}>
-                        <input
-                            type="file"
                             name="report"
                             accept="application/pdf"
                             onChange={handleChange}
@@ -358,21 +324,6 @@ const CreateItemForm = ({ open, handleClose, project, onCreate }) => {
                         <label>Report: File</label>
                     </Grid>
                 </Grid>
-
-                {formData.photos.length > 0 && (
-                    <Grid container spacing={2} marginTop={2}>
-                        {formData.photos.map((photo, index) => (
-                            <Grid item xs={12} key={index}>
-                                <div style={{ display: 'flex', alignItems: 'center' }}>
-                                    <span>{photo.name}</span>
-                                    <IconButton onClick={() => handleRemovePhoto(index)}>
-                                        <DeleteIcon />
-                                    </IconButton>
-                                </div>
-                            </Grid>
-                        ))}
-                    </Grid>
-                )}
             </DialogContent>
             <DialogActions>
                 <Button onClick={handleClose}>Cancel</Button>
@@ -380,7 +331,15 @@ const CreateItemForm = ({ open, handleClose, project, onCreate }) => {
                     {project ? 'Update' : 'Create'}
                 </Button>
             </DialogActions>
+
         </Dialog>
+        <Snackbar
+                open={snackbarOpen}
+                autoHideDuration={3000}
+                onClose={() => setSnackbarOpen(false)} // Đảm bảo Snackbar đóng lại khi hết thời gian
+                message="Project created successfully!"
+            />
+        </>
     );
 };
 
