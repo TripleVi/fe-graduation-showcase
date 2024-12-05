@@ -6,6 +6,7 @@ import '../css/DetailProject.css';
 import Header from "../pages/Header";
 import Footer from "../pages/Footer";
 import BoxAi from "./ChatBox";
+import { Snackbar, Alert } from '@mui/material';
 
 const api = axios.create({
     baseURL: 'https://graduationshowcase.online/api/v1',
@@ -30,7 +31,9 @@ const DetailProjectPage = () => {
         name: '',
         email: '',
     });
-
+    const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    
     useEffect(() => {
         const fetchProjectDetails = async () => {
             try {
@@ -68,6 +71,12 @@ const DetailProjectPage = () => {
     // Comment handling functions remain the same
     const handlePostComment = async () => {
         if (!newComment) return;
+        const token = localStorage.getItem('token');
+        if (!token) {
+            setSnackbarMessage('You need to log in to post a comment.');
+            setOpenSnackbar(true);
+            return;
+        }
         try {
             const response = await api.post(`/projects/${projectId}/comments`, {
                 content: newComment,
@@ -83,7 +92,12 @@ const DetailProjectPage = () => {
             setComments([...comments, newCommentData]);
             setNewComment('');
         } catch (error) {
+            if (error.response && error.response.status === 401) {
+            setSnackbarMessage('You are not authorized. Please log in to post a comment.');
+            setOpenSnackbar(true);
+        } else {
             console.error('Error posting comment:', error);
+        }
         }
     };
 
@@ -222,28 +236,17 @@ const DetailProjectPage = () => {
                                 {desc.content}
                             </Typography>
                             
-                            {project.photos && (
-                                <div className="image-gallery">
-                                    <Grid container spacing={3}>
-                                        {project.photos.map((photo) => {
-                                            if (photo.id === desc.photoId) {
-                                                return (
-                                                    <Grid item xs={12} md={6} key={photo.id}>
-                                                        <figure className="image-figure">
-                                                            <img
-                                                                src={photo.url}
-                                                                alt={`Project visual ${photo.id}`}
-                                                                className="content-image"
-                                                            />
-                                                        </figure>
-                                                    </Grid>
-                                                );
-                                            }
-                                            return null;
-                                        })}
-                                    </Grid>
-                                </div>
-                            )}
+                            {desc.photoUrl && (
+                    <div className="image-gallery">
+                        <figure className="image-figure">
+                            <img
+                                src={desc.photoUrl}
+                                alt={`Project visual for ${desc.title}`}
+                                className="content-image"
+                            />
+                        </figure>
+                    </div>
+                )}
                         </section>
                     ))}
                 </div>
@@ -274,6 +277,24 @@ const DetailProjectPage = () => {
                     </div>
                 </section>
 
+                {/* PDF Download Section */}
+                {project.reportUrl && (
+                    <section className="report-section">
+                        <Typography variant="h3" className="section-title">
+                            For more detail download the Report below
+                        </Typography>
+                        <Button
+                            href={project.reportUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            variant="contained"
+                            color="primary"
+                            className="download-button"
+                        >
+                            Download PDF Report
+                        </Button>
+                    </section>
+                )}
                 {/* Comments Section */}
                 <section className="comments-section">
                     <Typography variant="h3" className="section-title">
@@ -289,6 +310,13 @@ const DetailProjectPage = () => {
                             rows={3}
                             value={newComment}
                             onChange={(e) => setNewComment(e.target.value)}
+                            onKeyDown={(e) => {
+                                // Kiểm tra nếu phím Enter được nhấn và không nhấn phím Shift (để tránh thêm dòng mới)
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();  // Ngừng hành vi mặc định (thêm dòng mới)
+                                    handlePostComment();  // Gửi comment
+                                }
+                            }}
                             className="comment-input"
                         />
                         <Button 
@@ -329,12 +357,20 @@ const DetailProjectPage = () => {
                                                 value={editingCommentContent}
                                                 onChange={(e) => setEditingCommentContent(e.target.value)}
                                                 className="edit-comment-input"
+                                                onKeyDown={(e) => {
+                                                    // Kiểm tra nếu phím Enter được nhấn và không nhấn phím Shift (để tránh thêm dòng mới)
+                                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                                        e.preventDefault();  // Ngừng hành vi mặc định (thêm dòng mới)
+                                                        handleUpdateComment();  // Gửi comment
+                                                    }
+                                                }}
                                             />
                                             <div className="edit-comment-actions">
                                                 <Button 
                                                     onClick={handleUpdateComment}
                                                     variant="contained"
                                                     color="primary"
+                                                    
                                                 >
                                                     Save Changes
                                                 </Button>
@@ -372,6 +408,8 @@ const DetailProjectPage = () => {
                                                     {showReplies[comment.id] ? 'Hide Replies' : 'Show Replies'}
                                                 </Button>
                                                 
+                                                {user && comment.author?.name === user.name && (
+                                                    
                                                     <>
                                                         <Button 
                                                             onClick={() => handleEditComment(comment)}
@@ -388,7 +426,7 @@ const DetailProjectPage = () => {
                                                             Delete
                                                         </Button>
                                                     </>
-                                                
+                                                )}
                                             </div>
                                         </>
                                     )}
@@ -401,6 +439,13 @@ const DetailProjectPage = () => {
                                                 value={replyContent}
                                                 onChange={(e) => setReplyContent(e.target.value)}
                                                 className="reply-input"
+                                                onKeyDown={(e) => {
+                                                    // Kiểm tra nếu phím Enter được nhấn và không nhấn phím Shift (để tránh thêm dòng mới)
+                                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                                        e.preventDefault();  // Ngừng hành vi mặc định (thêm dòng mới)
+                                                        handlePostReply();  // Gửi comment
+                                                    }
+                                                }}
                                             />
                                             <div className="reply-actions">
                                                 <Button 
@@ -441,6 +486,7 @@ const DetailProjectPage = () => {
                                                     <Typography variant="body2" className="reply-content">
                                                         {reply.content}
                                                     </Typography>
+                                                    
                                                 </div>
                                             ))}
                                         </div>
@@ -454,6 +500,15 @@ const DetailProjectPage = () => {
 
             <BoxAi />
             <Footer />
+            <Snackbar
+                open={openSnackbar}
+                autoHideDuration={6000}
+                onClose={() => setOpenSnackbar(false)}
+            >
+                <Alert onClose={() => setOpenSnackbar(false)} severity="warning">
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
         </div>
     );
 };

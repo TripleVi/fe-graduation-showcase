@@ -4,12 +4,13 @@ import { Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button, M
 import AddIcon from '@mui/icons-material/Add';
 import axios from 'axios';
 
-const CreateItemForm = ({ open, handleClose, project, onCreate }) => {
+const CreateItemForm = ({ open, handleCreateClose, project, onCreate }) => {
     const [formData, setFormData] = useState({
         title: project?.title || '',
         description: project?.description || [{ title: '', content: '', fileIndex: null }],
         authors: [{ name: '', email: '', avatar: null }],
         photos: [],
+        thumbnail: null, // Add thumbnail field
         report: null,
         year: project?.year || 2024,
         topicId: project?.topicId || 1,
@@ -50,9 +51,10 @@ const CreateItemForm = ({ open, handleClose, project, onCreate }) => {
         if (project) {
             setFormData({
                 title: project.title || '',
-                description: project.description || [{ title: '', content: '', fileIndex: null }],
+                description: project.description || [{ title: '', content: '' }],
                 authors: project.authors || [{ name: '', email: '', avatar: null }],
                 photos: [],
+                thumbnail: null, // Reset thumbnail
                 report: null,
                 year: project.year || 2024,
                 topicId: project.topicId || '',
@@ -78,6 +80,8 @@ const CreateItemForm = ({ open, handleClose, project, onCreate }) => {
             setFormData({ ...formData, description: updatedDescription });
         } else if (name === 'photos') {
             setFormData({ ...formData, photos: [...formData.photos, ...Array.from(files)] });
+        }else if (name === 'thumbnail') {
+                setFormData({ ...formData, thumbnail: files ? files[0] : null });
         } else {
             setFormData({ ...formData, [name]: files ? files[0] : value });
         }
@@ -86,7 +90,7 @@ const CreateItemForm = ({ open, handleClose, project, onCreate }) => {
     const handleAddDescription = () => {
         setFormData({
             ...formData,
-            description: [...formData.description, { title: '', content: '', fileIndex: null }],
+            description: [...formData.description, { title: '', content: '' }],
         });
     };
 
@@ -106,73 +110,123 @@ const CreateItemForm = ({ open, handleClose, project, onCreate }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+    
+        // Check for required fields
         if (!formData.title || !formData.year || !formData.topicId || formData.authors.some(author => !author.name || !author.email)) {
             setSnackbarMessage('Please fill all required sections.');
             setSnackbarOpen(true);
             return;
         }
-        const { title, description, year, topicId, hashtags, authors, photos, report } = formData;
+
+        const authorNames = formData.authors.map(author => author.name.trim().toLowerCase());
+        const authorEmails = formData.authors.map(author => author.email.trim().toLowerCase());
+        const duplicateName = authorNames.find((name, index) => authorNames.indexOf(name) !== index);
+        const duplicateEmail = authorEmails.find((email, index) => authorEmails.indexOf(email) !== index);
+
+        if (duplicateName) {
+            setSnackbarMessage(`The author name "${duplicateName}" has already been used.`);
+            setSnackbarOpen(true);
+            return;
+        }
+
+        if (duplicateEmail) {
+            setSnackbarMessage(`The email "${duplicateEmail}" has already been used.`);
+            setSnackbarOpen(true);
+            return;
+        }
+    
+        // Prepare project data
+        const { title, description, year, topicId, hashtags, authors, photos, report, thumbnail } = formData;
     
         const projectData = {
             title,
-            description,
+            description: description.map(desc => ({
+                title: desc.title.trim(),
+                content: desc.content.trim(),
+                ...(desc.fileIndex !== undefined && { fileIndex: desc.fileIndex }),
+            })),
             year,
             topicId,
-            hashtags: hashtags.split(',').map(tag => tag.trim()),
+            hashtags: hashtags ? hashtags.split(',').map(tag => tag.trim()) : [],
             authors: authors.map((author, index) => ({
                 name: author.name.trim(),
                 email: author.email.trim() || `author@example.com`,
-                fileIndex: author.avatar ? index : null,
+                ...(author.avatar && { fileIndex: index }),
             })),
         };
     
         const form = new FormData();
         form.append('project', JSON.stringify(projectData));
     
+        // Add photos if any
         if (photos.length > 0) {
             photos.forEach((photo) => {
                 form.append('photos', photo);
             });
         }
     
+        // Only add report if it exists
         if (report) {
             form.append('report', report);
         }
     
+        // Only add authors' avatars if they exist
         authors.forEach((author, index) => {
             if (author.avatar) {
                 form.append('avatars', author.avatar);
             }
         });
     
+        // Add thumbnail if selected
+        if (thumbnail) {
+            form.append('thumbnail', thumbnail);
+        }
+    
         try {
             let response;
             if (project) {
-                // Cập nhật project
+                // Update project
                 response = await api.put(`/projects/${project.id}`, form, {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 });
             } else {
-                // Tạo mới project
+                // Create new project
                 response = await api.post('/projects', form, {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 });
             }
+    
+            console.log('Project created/updated response:', response.data); // Log the response for debugging
             setSnackbarMessage(project ? 'Project updated successfully!' : 'Project created successfully!');
-            setSnackbarOpen(true); // Mở Snackbar khi tạo thành công
+            setSnackbarOpen(true);
     
-            // Cập nhật state của HomePage bằng cách truyền dữ liệu project mới
-            onCreate(response.data.data); // Cập nhật project mới vào bảng ngay lập tức
-    
-            handleClose();
+            onCreate(response.data.data); // Update the new project in the list immediately
+            handleCreateClose();
         } catch (error) {
             console.error('Error creating/updating project:', error);
+            if (error.response && error.response.status === 409) {
+                setSnackbarMessage('Conflict error: Name or Email already used.');
+            } else {
+                setSnackbarMessage('Error while saving the project.');
+            }
+    
+            setSnackbarMessage('Error while saving the project.');
+            setSnackbarOpen(true);
         }
     };
     
+    
     return (
         <>
-        <Dialog open={open} onClose={handleClose}>
+        <Dialog open={open} onClose={handleCreateClose}
+            sx={{
+                '& .MuiPaper-root': {
+                    
+                    maxWidth: 'none', // Remove the max width restriction
+                    
+                }
+            }}
+        >
             <DialogTitle>{project ? 'Edit Project' : 'Create New Project'}</DialogTitle>
             <DialogContent>
                 <TextField
@@ -183,6 +237,7 @@ const CreateItemForm = ({ open, handleClose, project, onCreate }) => {
                     value={formData.title}
                     onChange={handleChange}
                 />
+
                 {formData.description.map((desc, index) => (
                     <Grid container spacing={2} key={index} marginTop={2}>
                         <Grid item xs={6}>
@@ -209,23 +264,36 @@ const CreateItemForm = ({ open, handleClose, project, onCreate }) => {
                                 style={{ maxHeight: 200, overflowY: 'auto' }}
                             />
                         </Grid>
+                        
                         <Grid item xs={12}>
                             <input
                                 type="file"
                                 name={`description.${index}.photo`}
                                 accept="image/*"
                                 onChange={(e) => {
-                                    const photo = e.target.files[0];
+                                    const photo = e.target.files[0]; // Get the selected photo
                                     const newDescription = [...formData.description];
-                                    newDescription[index].fileIndex = formData.photos.length;
-                                    setFormData({
-                                        ...formData,
-                                        description: newDescription,
-                                        photos: [...formData.photos, photo],
-                                    });
+
+                                    // If a photo is selected, set the fileIndex
+                                    if (photo) {
+                                        // Set fileIndex based on photos array length
+                                        newDescription[index].fileIndex = formData.photos.length;
+                                        setFormData({
+                                            ...formData,
+                                            description: newDescription,
+                                            photos: [...formData.photos, photo], // Add photo to the photos array
+                                        });
+                                    } else {
+                                        // If no photo is selected, remove fileIndex (or leave it undefined)
+                                        delete newDescription[index].fileIndex;  // Or set it to undefined
+                                        setFormData({
+                                            ...formData,
+                                            description: newDescription,
+                                        });
+                                    }
                                 }}
                             />
-                            <label>Photo </label>
+                            <label>Photo</label>
                         </Grid>
                     </Grid>
                 ))}
@@ -276,6 +344,18 @@ const CreateItemForm = ({ open, handleClose, project, onCreate }) => {
                     )}
                 </TextField>
 
+                <Grid container spacing={2} marginTop={2}>
+                        <Grid item xs={12}>
+                            <input
+                                type="file"
+                                name="thumbnail"
+                                accept="image/*"
+                                onChange={handleChange}
+                            />
+                            <label>Thumbnail (Cover Image)</label>
+                        </Grid>
+                </Grid>
+
                 {formData.authors.map((author, index) => (
                     <Grid container spacing={2} key={index} marginTop={2}>
                         <Grid item xs={6}>
@@ -298,14 +378,19 @@ const CreateItemForm = ({ open, handleClose, project, onCreate }) => {
                                 onChange={handleChange}
                             />
                         </Grid>
-                        <Grid item xs={6}>
+                        <Grid item xs={12}>
                             <input
                                 type="file"
                                 name={`authors.${index}.avatar`}
                                 accept="image/*"
-                                onChange={handleChange}
+                                onChange={(e) => {
+                                    const avatar = e.target.files[0];
+                                    const updatedAuthors = [...formData.authors];
+                                    updatedAuthors[index].avatar = avatar;
+                                    setFormData({ ...formData, authors: updatedAuthors });
+                                }}
                             />
-                            <label>Avatar: File</label>
+                            <label>Avatar</label>
                         </Grid>
                     </Grid>
                 ))}
@@ -326,7 +411,7 @@ const CreateItemForm = ({ open, handleClose, project, onCreate }) => {
                 </Grid>
             </DialogContent>
             <DialogActions>
-                <Button onClick={handleClose}>Cancel</Button>
+                <Button onClick={handleCreateClose}>Cancel</Button>
                 <Button onClick={handleSubmit} color="primary">
                     {project ? 'Update' : 'Create'}
                 </Button>

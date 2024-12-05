@@ -105,9 +105,9 @@
     color: #333;
 }
 
-.image-gallery {
+/* .image-gallery {
     margin: 2rem 0;
-}
+} */
 
 .image-figure {
     margin: 0;
@@ -316,6 +316,18 @@
     font-size: 1.2rem;
     color: #6c757d;
 }
+
+.report-section {
+    margin-top: 2rem;
+    text-align: center;
+}
+
+.download-button {
+    margin-top: 1rem;
+    padding: 10px 20px;
+    font-size: 16px;
+}
+
 
 /* Responsive Design */
 @media (max-width: 768px) {

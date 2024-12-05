@@ -14,53 +14,37 @@ const api = axios.create({
     }
 });
 
-const MajorTab = () => {
+const MajorTab = ({majors}) => {
     const [data, setData] = useState({
         majors: [],
-        topics: []
     });
     const [openForm, setOpenForm] = useState(false);
     const [openConfirm, setOpenConfirm] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
     const [itemToEdit, setItemToEdit] = useState(null);
-    const [formValues, setFormValues] = useState({ name: '', majorId: '' });
+    const [formValues, setFormValues] = useState({ name: '' });
     const [openSnackbar, setOpenSnackbar] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [snackbarSeverity, setSnackbarSeverity] = useState('success');
-    
+
     useEffect(() => {
-        fetchMajors();
-        fetchTopics();
-    }, []);
+        if (majors) {
+            setData((prevData) => ({
+                ...prevData,
+                majors: majors
+                    .filter((major) => major) // Loại bỏ các phần tử undefined/null
+                    .map((major, index) => ({
+                        ...major,
+                        id: major?.id || `temp-id-${index}` 
+                    }))
+            }));
+        }
+    }, [majors]);    
 
     const handleSnackbarClose = () => {
         setOpenSnackbar(false);
     };
 
-    const fetchMajors = async () => {
-        try {
-            const response = await api.get('/majors');
-            setData((prevData) => ({
-                ...prevData,
-                majors: Array.isArray(response.data.data) ? response.data.data : []
-            }));
-        } catch (error) {
-            console.error('Error fetching majors:', error);
-        }
-    };
-
-    const fetchTopics = async (majorId = '') => {
-        try {
-            const response = await api.get('/topics');
-            setData((prevData) => ({
-                ...prevData,
-                topics: Array.isArray(response.data.data) ? response.data.data : []
-            }));
-        } catch (error) {
-            console.error('Error fetching topics:', error);
-        }
-    };
-    
     const handleDelete = async () => {
         try {
             if (itemToDelete) {
@@ -87,19 +71,23 @@ const MajorTab = () => {
     };
 
     const handleDeleteClick = (id) => {
+        if (!id) {
+            console.error('Item does not have a valid id:', id);
+            return;
+        }
         setItemToDelete(id);
         setOpenConfirm(true);
     };
 
     const handleEdit = (row) => {
         setItemToEdit(row);
-        setFormValues({ name: row.name, majorId: row.majorId || '' });
+        setFormValues({ name: row.name });
         setOpenForm(true);
     };
 
     const handleFormSubmit = async (e) => {
         e.preventDefault();
-    
+
         try {
             if (itemToEdit) {
                 await api.put(`/majors/${itemToEdit.id}`, { name: formValues.name });
@@ -111,11 +99,8 @@ const MajorTab = () => {
                         major.id === itemToEdit.id ? { ...major, name: formValues.name } : major
                     ),
                 }));
-            } else {
-                await api.post('/majors', { name: formValues.name });
-            }
+            } 
             setOpenSnackbar(true);
-            fetchMajors();
             setOpenForm(false);
         } catch (error) {
             setSnackbarMessage('Error saving major');
@@ -129,34 +114,36 @@ const MajorTab = () => {
         <Box sx={{ display: 'flex' }}>
             <Grid item xs={12}>
             <DataGrid
-                rows={data.majors.map((major, index) => ({
-                    ...major,
-                    no: index + 1,  // Tính số thứ tự (index + 1)
-                }))}
-                columns={[
-                    {
-                        field: 'no',
-                        headerName: 'No.',
-                        width: 90,
-                        renderCell: (params) => <span>{params.row.no}</span>,  // Hiển thị số thứ tự
-                    },
-                    { field: 'name', headerName: 'Name', flex: 1 },
-                    {
-                        field: 'actions',
-                        headerName: 'Actions',
-                        renderCell: (params) => (
-                            <>
-                                <IconButton onClick={() => handleEdit(params.row)}><Edit /></IconButton>
-                                <IconButton onClick={() => handleDeleteClick(params.row.id)}><Delete /></IconButton>
-                            </>
-                        ),
-                        flex: 1,
-                    }
-                ]}
-                pageSize={5}
-            />
+                    rows={data.majors} 
+                    getRowId={(row) => row.id || row.tempId}
+                    columns={[
+                        { field: 'id', headerName: 'ID', width: 100 },
+                        { field: 'name', headerName: 'Name', width: 200 },
+                        {
+                            field: 'actions',
+                            headerName: 'Actions',
+                            width: 150,
+                            renderCell: (params) => (
+                                <>
+                                    <IconButton
+                                        onClick={() => handleEdit(params.row)}
+                                    >
+                                        <Edit />
+                                    </IconButton>
+                                    <IconButton
+                                        onClick={() => handleDeleteClick(params.row.id)}
+                                    >
+                                        <Delete />
+                                    </IconButton>
+                                </>
+                            )
+                        }
+                    ]}
+                    autoHeight
+                />
             </Grid>
 
+            {/* Edit Major Dialog */}
             <Dialog open={openForm} onClose={handleCreateClose}>
                 <DialogTitle>{itemToEdit ? 'Edit Major' : 'Create Major'}</DialogTitle>
                 <form onSubmit={handleFormSubmit}>
@@ -176,6 +163,7 @@ const MajorTab = () => {
                 </form>
             </Dialog>
 
+            {/* Confirm Delete Dialog */}
             <Dialog open={openConfirm} onClose={() => setOpenConfirm(false)}>
                 <DialogTitle>Confirm Delete</DialogTitle>
                 <DialogActions>
@@ -184,6 +172,7 @@ const MajorTab = () => {
                 </DialogActions>
             </Dialog>
 
+            {/* Snackbar for Feedback */}
             <Snackbar
                 open={openSnackbar}
                 autoHideDuration={3000}

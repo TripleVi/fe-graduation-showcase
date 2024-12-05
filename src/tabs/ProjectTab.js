@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Box, Grid, IconButton, Dialog, DialogTitle, DialogActions, Button , Snackbar,Alert
+    Box, Grid, IconButton, Dialog, DialogTitle, DialogActions, Button, Snackbar, Alert, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination
 } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
-import { DataGrid } from '@mui/x-data-grid'; // Import from MUI for table
 import axios from 'axios';
 import UpdateProjectForm from '../components/UpdateProjectForm';
 
@@ -18,32 +17,41 @@ const ProjectTab = () => {
     const [data, setData] = useState({
         projects: [],
     });
+    const [totalItems, setTotalItems] = useState(0); // Store total number of items
     const [openConfirm, setOpenConfirm] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
     const [selectedProject, setSelectedProject] = useState(null); 
     const [openUpdateProjectForm, setOpenUpdateProjectForm] = useState(false);
     const [openSnackbar, setOpenSnackbar] = useState(false); // State for Snackbar
     const [snackbarMessage, setSnackbarMessage] = useState(''); // Message for Snackbar
+    const [page, setPage] = useState(0); // Current page number
+    const [pageSize, setPageSize] = useState(25); // Rows per page (25 projects per page)
 
     useEffect(() => {
-        fetchProjects();
-    }, []);
+        // Fetch projects when the component mounts or page changes
+        fetchProjects(page, pageSize);
+    }, [page, pageSize]); // Re-fetch when page or pageSize changes
 
-    const fetchProjects = async () => {
+    const fetchProjects = async (page, pageSize) => {
         try {
-            const response = await api.get('/projects');
-            const projects = response.data.data.map((project, index) => ({
-                ...project,
-                rowNumber: index + 1, // Set row number starting from 1
-                topicName: project.topic ? project.topic.name : '', // Flattening the topic name
-                hashtags: project.hashtags.join(', '), // Converting hashtags array to a string
-                description: project.description.map(desc => desc.title).join(', ') // Extracting only titles from descriptions
-            }));
+            const offset = page * pageSize; // Offset dựa trên trang hiện tại
+            const response = await api.get('/projects', {
+                params: {
+                    offset,
+                    limit: pageSize,
+                },
+            });
     
-            setData((prevData) => ({
-                ...prevData,
-                projects
-            }));
+            const projects = response.data.data ? response.data.data.map((project, index) => ({
+                ...project,
+                id: project.id,
+                rowNumber: offset + index + 1,
+                topicName: project.topic ? project.topic.name : '',
+                hashtags: project.hashtags.join(', '),
+            })) : [];
+    
+            setData({ projects });
+            setTotalItems(response.data.metadata.totalItems); // Cập nhật tổng số lượng
         } catch (error) {
             console.error('Error fetching projects:', error);
         }
@@ -84,41 +92,68 @@ const ProjectTab = () => {
         setOpenSnackbar(false);
     };
 
+    const handlePageChange = (event, newPage) => {
+        setPage(newPage); // Update the current page
+    };
+
+    const handlePageSizeChange = (event) => {
+        setPageSize(parseInt(event.target.value, 10)); // Update the page size
+        setPage(0); // Reset to the first page
+    };
+
     return (
-        <Box sx={{ flexGrow: 1 }}>
-            {/* DataGrid */}
+        <Box sx={{ flexGrow: 1, padding: 2 }}>
             <Grid container spacing={2}>
                 <Grid item xs={12}>
-                <DataGrid
-                    rows={data.projects}
-                    columns={[
-                        {
-                            field: 'rowNumber', // Use the rowNumber field directly
-                            headerName: 'No.',
-                            width: 90,
-                        },
-                        { field: 'title', headerName: 'Title', width: 200 },
-                        { field: 'description', headerName: 'Description', width: 300 },
-                        { field: 'topicName', headerName: 'Topic', width: 150 },
-                        { field: 'hashtags', headerName: 'Hashtags', width: 250 },
-                        {
-                            field: 'action',
-                            headerName: 'Action',
-                            renderCell: (params) => (
-                                <div>
-                                    <IconButton onClick={() => handleProjectEdit(params.row.id)}>
-                                        <Edit />
-                                    </IconButton>
-                                    <IconButton onClick={() => handleProjectDeleteClick(params.row.id)}>
-                                        <Delete />
-                                    </IconButton>
-                                </div>
-                            ),
-                        },
-                    ]}
-                    pageSize={5}
-                    rowsPerPageOptions={[5]}
-                />
+                    {data.projects.length === 0 ? (
+                        <Typography variant="h6" align="center" color="textSecondary">
+                            No project right now
+                        </Typography>
+                    ) : (
+                        <div>
+                            <TableContainer sx={{ boxShadow: 3, borderRadius: 1, overflow: 'hidden' }}>
+                                <Table>
+                                    <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
+                                        <TableRow>
+                                            <TableCell sx={{ fontWeight: 'bold', color: '#1976d2' }}>No.</TableCell>
+                                            <TableCell sx={{ fontWeight: 'bold', color: '#1976d2' }}>Title</TableCell>
+                                            <TableCell sx={{ fontWeight: 'bold', color: '#1976d2' }}>Topic</TableCell>
+                                            <TableCell sx={{ fontWeight: 'bold', color: '#1976d2' }}>Hashtags</TableCell>
+                                            <TableCell sx={{ fontWeight: 'bold', color: '#1976d2' }}>Actions</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {data.projects.map((project) => (
+                                            <TableRow key={project.id} sx={{ '&:nth-of-type(odd)': { backgroundColor: '#f9f9f9' } }}>
+                                                <TableCell>{project.rowNumber}</TableCell>
+                                                <TableCell>{project.title}</TableCell>
+                                                <TableCell>{project.topicName}</TableCell>
+                                                <TableCell>{project.hashtags}</TableCell>
+                                                <TableCell>
+                                                    <IconButton onClick={() => handleProjectEdit(project.id)} sx={{ color: '#1976d2' }}>
+                                                        <Edit />
+                                                    </IconButton>
+                                                    <IconButton onClick={() => handleProjectDeleteClick(project.id)} sx={{ color: '#d32f2f' }}>
+                                                        <Delete />
+                                                    </IconButton>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                            <TablePagination
+                                rowsPerPageOptions={[25, 50, 100]}
+                                component="div"
+                                count={totalItems}
+                                rowsPerPage={pageSize}
+                                page={page}
+                                onPageChange={handlePageChange}
+                                onRowsPerPageChange={handlePageSizeChange}
+                                sx={{ marginTop: 2 }}
+                            />
+                        </div>
+                    )}
                 </Grid>
             </Grid>
 

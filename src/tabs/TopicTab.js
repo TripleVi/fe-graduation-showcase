@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
     IconButton, Box, Grid, Dialog, DialogTitle,
-    DialogActions, Button, Select, MenuItem, TextField, Snackbar, Alert
+    DialogActions, Button, Snackbar, Alert, TextField
 } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
-import { DataGrid } from '@mui/x-data-grid'; // Import from MUI for table
+import { DataGrid } from '@mui/x-data-grid';
 import axios from 'axios';
 
 const api = axios.create({
@@ -14,56 +14,35 @@ const api = axios.create({
     }
 });
 
-const TopicTab = () => {
-    const [data, setData] = useState({
-        projects: [],
-        majors: [],
-        topics: [],
-        backups: []
-    });
+const TopicTab = ({ topics }) => {
+    const [data, setData] = useState({ topics: [] });
     const [openForm, setOpenForm] = useState(false);
-    const [openProjectForm, setOpenProjectForm] = useState(false); // State for CreateItemForm
     const [isEditing, setIsEditing] = useState(false);
     const [openConfirm, setOpenConfirm] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
     const [itemToEdit, setItemToEdit] = useState(null);
-    const [selectedMajor, setSelectedMajor] = useState('');
-    const [formValues, setFormValues] = useState({ name: '', majorId: '' });
+    const [formValues, setFormValues] = useState({ name: '' });
     const [openSnackbar, setOpenSnackbar] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
+    // Đồng bộ state topics khi props topics thay đổi
+    useEffect(() => {
+        if (topics) {
+            setData((prevData) => ({
+                ...prevData,
+                topics: topics
+                    .filter((topic) => topic) // Loại bỏ các phần tử undefined/null
+                    .map((topic, index) => ({
+                        ...topic,
+                        id: topic?.id || `temp-id-${index}` // Đảm bảo topic tồn tại trước khi truy cập id
+                    }))
+            }));
+        }
+    }, [topics]);    
+
     const handleSnackbarClose = () => {
         setOpenSnackbar(false);
-    };
-
-    useEffect(() => {
-        fetchMajors();
-        fetchTopics();
-    }, [selectedMajor]); // Fetch topics when the selected major changes
-
-    const fetchMajors = async () => {
-        try {
-            const response = await api.get('/majors');
-            setData((prevData) => ({
-                ...prevData,
-                majors: Array.isArray(response.data.data) ? response.data.data : []
-            }));
-        } catch (error) {
-            console.error('Error fetching majors:', error);
-        }
-    };
-
-    const fetchTopics = async () => {
-        try {
-            const response = await api.get('/topics');
-            setData((prevData) => ({
-                ...prevData,
-                topics: Array.isArray(response.data.data) ? response.data.data : []
-            }));
-        } catch (error) {
-            console.error('Error fetching topics:', error);
-        }
     };
 
     const handleDelete = async () => {
@@ -73,6 +52,8 @@ const TopicTab = () => {
                 setSnackbarMessage('Topic deleted successfully');
                 setSnackbarSeverity('success');
                 setOpenSnackbar(true);
+
+                // Xóa topic khỏi state
                 setData((prevData) => ({
                     ...prevData,
                     topics: prevData.topics.filter((topic) => topic.id !== itemToDelete)
@@ -84,111 +65,99 @@ const TopicTab = () => {
         }
     };
 
-    const handleCreateClose = () => {
-        setOpenForm(false);
-        setOpenProjectForm(false); // Close CreateItemForm
-    };
-
-    const handleMajorChange = (event) => {
-        const majorId = event.target.value;
-        setSelectedMajor(majorId);
-        setFormValues((prevValues) => ({
-            ...prevValues,
-            majorId // Gán ID của major vào formValues.majorId
-        }));
-        fetchTopics();
-    };
-
     const handleDeleteClick = (id) => {
+        if (!id) {
+            console.error('Item does not have a valid id:', id);
+            return;
+        }
         setItemToDelete(id);
         setOpenConfirm(true);
     };
 
     const handleEdit = (row) => {
         setIsEditing(true);
-        setItemToEdit(row); // Set the item to be edited
-        setFormValues({ name: row.name, majorId: row.majorId || '' });
+        setItemToEdit(row);
+        setFormValues({ name: row.name });
         setOpenForm(true);
     };
 
     const handleFormSubmit = async (e) => {
         e.preventDefault();
+        // if (!formValues.name || (isEditing && !formValues.majorId)) {
+        //     setSnackbarMessage('Please fill in all required fields.');
+        //     setSnackbarSeverity('error');
+        //     setOpenSnackbar(true);
+        //     return;
+        // }
         try {
             if (isEditing) {
-                // Update logic
-                await api.put(`/topics/${itemToEdit.id}`, { name: formValues.name });
+                const updatedTopic = { name: formValues.name };
+                await api.put(`/topics/${itemToEdit.id}`, updatedTopic);
                 setSnackbarMessage('Topic updated successfully');
                 setSnackbarSeverity('success');
-                // Update the topic directly in the state
+
+                // Cập nhật topic trong state
                 setData((prevData) => ({
                     ...prevData,
-                    topics: prevData.topics.map(topic => 
+                    topics: prevData.topics.map((topic) =>
                         topic.id === itemToEdit.id ? { ...topic, name: formValues.name } : topic
-                    )
-                }));
-            } else {
-                // Create logic
-                const response = await api.post(`/majors/${formValues.majorId}/topics`, { name: formValues.name });
-                // Add the new topic to the state
-                setData((prevData) => ({
-                    ...prevData,
-                    topics: [response.data.data, ...prevData.topics], // Add new topic at the start of the list
+                    ),
                 }));
             }
             setOpenSnackbar(true);
-            fetchTopics();
-            setOpenForm(false); // Close the form
+            setOpenForm(false); // Đóng form
         } catch (error) {
-            setSnackbarMessage('Error saving major');
-            setSnackbarSeverity('error');
-            setOpenSnackbar(true);
-            console.error('Error saving item:', error);
+            if (error.response && error.response.status === 409) {
+                setSnackbarMessage('Topic name already exists.');
+                setSnackbarSeverity('error');
+                setOpenSnackbar(true);
+            } else {
+                setSnackbarMessage('Error saving topic');
+                setSnackbarSeverity('error');
+                setOpenSnackbar(true);
+                console.error('Error saving item:', error);
+            }
         }
     };
-    
+
+    const handleCreateClose = () => {
+        setOpenForm(false);
+    };
 
     return (
         <Box sx={{ display: 'flex' }}>
             <Grid item xs={12}>
-                {/* <Select value={selectedMajor} onChange={handleMajorChange} displayEmpty>
-                    <MenuItem value="">
-                        <em>Select Major</em>
-                    </MenuItem>
-                    {data.majors.map((major) => (
-                        <MenuItem key={major.id} value={major.id}>{major.name}</MenuItem>
-                    ))}
-                </Select> */}
                 <DataGrid
-                    rows={data.topics.map((topic, index) => ({
-                        ...topic,
-                        no: index + 1,  // Tính số thứ tự (index + 1)
-                    }))}
+                    rows={data.topics} // Sử dụng state data.topics
+                    getRowId={(row) => row.id || row.tempId}
                     columns={[
-                        
-                        {
-                            field: 'no',
-                            headerName: 'No.',
-                            width: 90,
-                            renderCell: (params) => <span>{params.row.no}</span>,  // Hiển thị số thứ tự
-                        },
+                        { field: 'id', headerName: 'ID', width: 100 },
                         { field: 'name', headerName: 'Name', width: 200 },
                         {
                             field: 'actions',
                             headerName: 'Actions',
+                            width: 150,
                             renderCell: (params) => (
-                                <div>
-                                    <IconButton onClick={() => handleEdit(params.row)}><Edit /></IconButton>
-                                    <IconButton onClick={() => handleDeleteClick(params.row.id)}><Delete /></IconButton>
-                                </div>
-                            ),
+                                <>
+                                    <IconButton
+                                        onClick={() => handleEdit(params.row)}
+                                    >
+                                        <Edit />
+                                    </IconButton>
+                                    <IconButton
+                                        onClick={() => handleDeleteClick(params.row.id)}
+                                    >
+                                        <Delete />
+                                    </IconButton>
+                                </>
+                            )
                         }
                     ]}
-                    pageSize={5}
-                    rowsPerPageOptions={[5]}
                     autoHeight
                 />
             </Grid>
 
+            {/* Form xử lý thêm/sửa topic */}
             <Dialog open={openForm} onClose={handleCreateClose}>
                 <DialogTitle>{isEditing ? 'Edit Topic' : 'Create Topic'}</DialogTitle>
                 <form onSubmit={handleFormSubmit}>
@@ -200,21 +169,6 @@ const TopicTab = () => {
                             fullWidth
                             required
                         />
-                        {isEditing && (
-                            <Select
-                                value={formValues.majorId}
-                                onChange={(e) => setFormValues({ ...formValues, majorId: e.target.value })}
-                                fullWidth
-                                displayEmpty
-                                required
-                                sx={{ mt: 2 }}
-                            >
-                                <MenuItem value="" disabled>Select Major</MenuItem>
-                                {data.majors.map((major) => (
-                                    <MenuItem key={major.id} value={major.id}>{major.name}</MenuItem>
-                                ))}
-                            </Select>
-                        )}
                     </Box>
                     <DialogActions>
                         <Button onClick={handleCreateClose}>Cancel</Button>
@@ -230,19 +184,18 @@ const TopicTab = () => {
                     <Button onClick={handleDelete}>Delete</Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Snackbar */}
             <Snackbar
                 open={openSnackbar}
                 autoHideDuration={3000}
                 onClose={handleSnackbarClose}
             >
-                <Alert
-                    onClose={handleSnackbarClose}
-                    severity={snackbarSeverity}
-                    sx={{ width: '100%' }}
-                >
+                <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: '100%' }}>
                     {snackbarMessage}
                 </Alert>
             </Snackbar>
+
         </Box>
     );
 };

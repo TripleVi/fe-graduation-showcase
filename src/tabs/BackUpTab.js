@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
     IconButton, Box, Typography, Grid, Dialog,
-    DialogActions, Button, TextField, RadioGroup, FormControlLabel, Radio, Table, TableBody, TableCell, TableHead, TableRow
+    DialogActions, Button, TextField, RadioGroup, FormControlLabel, Radio, Table, TableBody, TableCell, TableHead, TableRow, LinearProgress, Snackbar
 } from '@mui/material';
 import { Delete, Restore, GetApp } from '@mui/icons-material';
 import axios from 'axios';
@@ -26,6 +26,14 @@ const BackUpTab = () => {
     const [retainDays, setRetainDays] = useState(30);
     const [intervalHours, setIntervalHours] = useState(3);
 
+    // Trạng thái tiến trình và khôi phục
+    const [progress, setProgress] = useState(0);
+    const [isRestoring, setIsRestoring] = useState(false);
+    const [restoreMessage, setRestoreMessage] = useState('');
+
+    // Thông báo hệ thống đang restore
+    const [openSnackbar, setOpenSnackbar] = useState(false);
+
     useEffect(() => {
         fetchBackups();
     }, []);
@@ -33,12 +41,10 @@ const BackUpTab = () => {
     const fetchBackups = useCallback(async () => {
         try {
             const response = await api.get('/backups/database');
-            
             const backupsWithId = response.data.data.map((backup, index) => ({
                 ...backup,
-                id: backup.id || index, 
+                id: backup.id || index,
             }));
-
             setData((prevData) => {
                 const backupsChanged = backupsWithId.length !== prevData.backups.length ||
                                         !backupsWithId.every((backup, idx) => backup.id === prevData.backups[idx]?.id);
@@ -63,7 +69,7 @@ const BackUpTab = () => {
             await api.delete(`/backups/${itemToDelete}`);
             fetchBackups();
             setOpenConfirm(false);
-            setItemToDelete(null); 
+            setItemToDelete(null);
         } catch (error) {
             console.error('Error deleting backup:', error);
             alert('Failed to delete the backup');
@@ -78,16 +84,32 @@ const BackUpTab = () => {
     const confirmRestoreBackup = async () => {
         try {
             alert('Restore process started. This will take approximately 2 minutes.');
-            setTimeout(async () => {
-                await api.post(`/backups/${itemToRestore}/restore`);
-                alert('Backup restored successfully');
-                localStorage.setItem('restoreNotification', 'Backup restored successfully');
-                setOpenRestoreConfirm(false);
-                setItemToRestore(null); 
-            }, 120000);
+            setOpenRestoreConfirm(false);
+
+            // Thông báo hệ thống đang restore
+            setIsRestoring(true);
+            setRestoreMessage('System is restoring... Please wait.');
+
+            // Giả lập quá trình restore
+            let currentProgress = 0;
+            const interval = setInterval(() => {
+                currentProgress += 2;
+                setProgress(currentProgress);
+
+                if (currentProgress >= 100) {
+                    clearInterval(interval);
+                    setIsRestoring(false);
+                    setRestoreMessage('Restore completed successfully.');
+                    setOpenSnackbar(true);
+                    localStorage.setItem('restoreNotification', 'Backup restored successfully');
+                }
+            }, 2400);
+
+            await api.post(`/backups/${itemToRestore}/restore`);
         } catch (error) {
             console.error('Error restoring backup:', error);
             alert('Failed to restore backup');
+            setIsRestoring(false);
         }
     };
 
@@ -201,34 +223,40 @@ const BackUpTab = () => {
                                     <TableCell>{backup.name}</TableCell>
                                     <TableCell>{backup.size}</TableCell>
                                     <TableCell>
-                                        <IconButton onClick={() => handleDeleteBackup(backup.id)}><Delete /></IconButton>
-                                        <IconButton onClick={() => handleRestoreBackup(backup.id)}><Restore /></IconButton>
-                                        <IconButton onClick={() => handleDownload(backup.name, backup.id)}><GetApp /></IconButton>
+                                        <IconButton disabled={isRestoring} onClick={() => handleDeleteBackup(backup.id)}><Delete /></IconButton>
+                                        <IconButton disabled={isRestoring} onClick={() => handleRestoreBackup(backup.id)}><Restore /></IconButton>
+                                        <IconButton disabled={isRestoring} onClick={() => handleDownload(backup.name, backup.id)}><GetApp /></IconButton>
                                     </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
                 </Grid>
+                {isRestoring && (
+                    <Grid item xs={12}>
+                        <LinearProgress variant="determinate" value={progress} />
+                        <Typography variant="body2">{restoreMessage}</Typography>
+                    </Grid>
+                )}
             </Grid>
             <Dialog open={openConfirm} onClose={() => setOpenConfirm(false)}>
-                <Typography variant="h6" sx={{ p: 3 }}>
-                    Are you sure you want to delete this backup?
-                </Typography>
                 <DialogActions>
                     <Button onClick={() => setOpenConfirm(false)}>Cancel</Button>
-                    <Button onClick={confirmDeleteBackup} color="error">Delete</Button>
+                    <Button onClick={confirmDeleteBackup}>Confirm</Button>
                 </DialogActions>
             </Dialog>
             <Dialog open={openRestoreConfirm} onClose={() => setOpenRestoreConfirm(false)}>
-                <Typography variant="h6" sx={{ p: 3 }}>
-                    Are you sure you want to restore this backup?
-                </Typography>
                 <DialogActions>
                     <Button onClick={() => setOpenRestoreConfirm(false)}>Cancel</Button>
-                    <Button onClick={confirmRestoreBackup} color="primary">Restore</Button>
+                    <Button onClick={confirmRestoreBackup}>Confirm</Button>
                 </DialogActions>
             </Dialog>
+            <Snackbar
+                open={openSnackbar}
+                autoHideDuration={6000}
+                message={restoreMessage}
+                onClose={() => setOpenSnackbar(false)}
+            />
         </Box>
     );
 };

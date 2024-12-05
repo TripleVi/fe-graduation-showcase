@@ -41,7 +41,7 @@ function Header() {
 
     const handleLogout = () => {
         localStorage.clear();
-        window.location.href = '/login';
+        window.location.href = '/';
     };
 
     const handleNavigate = (path) => {
@@ -140,7 +140,7 @@ function Header() {
                     ) : (
                         <Button 
                             className="login-button"
-                            onClick={() => navigate('/')}
+                            onClick={() => navigate('/login')}
                         >
                             Login
                         </Button>

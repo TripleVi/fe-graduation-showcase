@@ -1,0 +1,260 @@
+  .MuiDrawer-paper {
+    background: linear-gradient(180deg, #20beff 0%, #55198b 100%) !important;
+    color: white !important;
+    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  .MuiDrawer-paper .MuiListItem-root {
+    padding: 12px 16px;
+    margin: 8px 12px;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .MuiDrawer-paper .MuiListItem-root:hover {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    transform: translateX(5px);
+  }
+  
+  .MuiDrawer-paper .MuiListItem-root.active {
+    background: rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(10px);
+  }
+  
+  .MuiDrawer-paper .MuiListItem-root.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 4px;
+    background: #fff;
+    border-radius: 0 4px 4px 0;
+  }
+  
+  .MuiDrawer-paper .MuiListItemIcon-root {
+    color: rgba(255, 255, 255, 0.9);
+    min-width: 40px;
+    transition: all 0.3s ease;
+  }
+  
+  .MuiDrawer-paper .MuiListItem-root:hover .MuiListItemIcon-root {
+    transform: scale(1.1);
+    color: #fff;
+  }
+  
+  .MuiDrawer-paper .MuiListItemText-primary {
+    font-size: 0.95rem;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+  }
+  
+  /* Main Content */
+  .main-content {
+    background: #f8fafc;
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  .MuiAppBar-root {
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(10px);
+    color: #1e3799 !important;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08) !important;
+  }
+  
+  .MuiCard-root {
+    border-radius: 16px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    background: linear-gradient(145deg, #ffffff, #f8fafc);
+  }
+  
+  .MuiCard-root:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08) !important;
+  }
+  
+  .MuiCardContent-root {
+    padding: 28px !important;
+  }
+  
+  
+  .MuiTypography-h4 {
+    font-weight: 700 !important;
+    margin: 16px 0 !important;
+    background: linear-gradient(45deg, #1e3799, #4a69bd);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .MuiTypography-h6 {
+    color: #4a5568 !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.5px;
+  }
+  
+  
+  .MuiDataGrid-root {
+    border: none !important;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+  }
+  
+  /* .MuiDataGrid-columnHeaders {
+    background: linear-gradient(to right, #f8fafc, #f1f5f9);
+    border-bottom: 2px solid #e2e8f0;
+    min-height: 60px !important;
+  } */
+  
+  .MuiDataGrid-columnHeader {
+    color: #1e3799;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .MuiDataGrid-cell {
+    border-color: #f1f5f9 !important;
+    padding: 16px !important;
+    font-size: 0.95rem;
+    margin-bottom: 30px;
+  }
+  
+  .MuiDataGrid-row {
+    transition: all 0.2s ease;
+  }
+  
+  .MuiDataGrid-row:hover {
+    background-color: #f8fafc !important;
+    transform: scale(1.002);
+  }
+  
+  /* Action Buttons */
+  .MuiDataGrid-cell .MuiIconButton-root {
+    color: #64748b !important;
+    padding: 8px !important;
+    transition: all 0.2s ease;
+  }
+  
+  .MuiDataGrid-cell .MuiIconButton-root:hover {
+    color: #1e3799 !important;
+    background-color: rgba(30, 55, 153, 0.08) !important;
+    transform: scale(1.1);
+  }
+  
+  /* Dialog Styling */
+  .MuiDialog-paper {
+    border-radius: 20px !important;
+    overflow: hidden !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1) !important;
+    /* width: 400px !important; */
+  }
+  
+  .MuiDialogTitle-root {
+    /* background: linear-gradient(45deg, #1e3799, #4a69bd); */
+    color: white;
+    padding: 20px 24px !important;
+    font-size: 1.2rem !important;
+    letter-spacing: 0.5px;
+  }
+  
+  .MuiDialogContent-root {
+    padding: 28px !important;
+  }
+  
+  .MuiDialogActions-root {
+    padding: 20px 24px !important;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+  }
+  
+  .MuiDialog-paper .MuiButton-root {
+    text-transform: none !important;
+    font-weight: 600 !important;
+    padding: 8px 24px !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease;
+  }
+  
+  .MuiDialog-paper .MuiButton-root:last-child {
+    background: linear-gradient(45deg, #1e3799, #4a69bd) !important;
+    color: white !important;
+  }
+  
+  .MuiDialog-paper .MuiButton-root:last-child:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(30, 55, 153, 0.3);
+  }
+  
+  /* Chart Styling */
+  .MuiGrid-item canvas {
+    max-height: 400px;
+    width: 100% !important;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.05));
+  }
+  
+  /* Tab Content Area */
+  .tab-content {
+    width: 100%;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    margin-top: 20px;
+    overflow: hidden;
+  }
+  
+  .tab-content > .MuiGrid-item {
+    padding: 24px;
+  }
+  
+  /* Responsive Design */
+  @media ( max-width: 600px) {
+    .MuiDrawer-paper {
+      width: 70px !important;
+    }
+    
+    .MuiListItemText-root {
+      display: none;
+    }
+    
+    .logo-container {
+      padding: 16px;
+    }
+    
+    .logo-container img {
+      width: 40px;
+    }
+    
+    .logo-container h6 {
+      display: none;
+    }
+    
+    .main-content {
+      padding: 16px;
+    }
+  }
+  
+  /* Custom Scrollbar */
+  .MuiDrawer-paper::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .MuiDrawer-paper::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+  }
+  
+  .MuiDrawer-paper::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+  }
+  
+  .MuiDrawer-paper::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
