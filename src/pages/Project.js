@@ -6,7 +6,7 @@ import { Search, FilterList, ThumbUp, Visibility } from '@mui/icons-material';
 import { TextField, IconButton, Menu, MenuItem, Grid, Select, Box, CircularProgress,FormControl,InputLabel,Button } from '@mui/material';
 
 const api = axios.create({
-    baseURL: 'https://graduationshowcase.online/api/v1',
+    baseURL: 'https://graduationshowcase.onrender.com/api/v1',
     headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`
     }

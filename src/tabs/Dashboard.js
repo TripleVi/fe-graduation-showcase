@@ -25,7 +25,7 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchProjectStats = async () => {
             try {
-                const response = await axios.get('https://graduationshowcase.online/api/v1/projects');
+                const response = await axios.get('https://graduationshowcase.onrender.com/api/v1/projects');
                 const projects = response.data.data;
     
                 // Calculate total views and likes

@@ -8,7 +8,7 @@ import { DataGrid } from '@mui/x-data-grid';
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'https://graduationshowcase.online/api/v1',
+    baseURL: 'https://graduationshowcase.onrender.com/api/v1',
     headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}` // Token from localStorage
     }

@@ -22,7 +22,7 @@ const CreateItemForm = ({ open, handleCreateClose, project, onCreate }) => {
     const [snackbarMessage, setSnackbarMessage] = useState('');
 
     const api = axios.create({
-        baseURL: 'https://graduationshowcase.online/api/v1',
+        baseURL: 'https://graduationshowcase.onrender.com/api/v1',
         headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
         },

@@ -10,7 +10,7 @@ import axios from 'axios';
 import avatar from '../img/DALL·E 2024-11-19 05.35.3.png';
 
 const api = axios.create({
-    baseURL: 'https://graduationshowcase.online/api/v1',
+    baseURL: 'https://graduationshowcase.onrender.com/api/v1',
     
     headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -132,7 +132,7 @@ function ChatPage({ onClose }) {
     
             // Tạo chat mới nếu chưa có chat
             if (!currentChatId) {
-                const response = await fetch('https://graduationshowcase.online/api/v1/chats', {
+                const response = await fetch('https://graduationshowcase.onrender.com/api/v1/chats', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -186,7 +186,7 @@ function ChatPage({ onClose }) {
                 }
             } else {
                 // Gửi tin nhắn vào chat hiện tại
-                const response = await fetch(`https://graduationshowcase.online/api/v1/chats/${newChatId}/messages`, {
+                const response = await fetch(`https://graduationshowcase.onrender.com/api/v1/chats/${newChatId}/messages`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

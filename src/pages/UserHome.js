@@ -11,7 +11,7 @@ import Footer from "../pages/Footer";
 import ChatBox from "../pages/ChatBox";
 // Create axios instance
 // const api = axios.create({
-//     baseURL: 'https://graduationshowcase.online/api/v1',
+//     baseURL: 'https://graduationshowcase.onrender.com/api/v1',
 //     headers: {
 //         Authorization: `Bearer ${localStorage.getItem('token')}`
 //     }

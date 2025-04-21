@@ -9,7 +9,7 @@ import BoxAi from "./ChatBox";
 import { Snackbar, Alert } from '@mui/material';
 
 const api = axios.create({
-    baseURL: 'https://graduationshowcase.online/api/v1',
+    baseURL: 'https://graduationshowcase.onrender.com/api/v1',
     headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`
     }

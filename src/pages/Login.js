@@ -15,7 +15,7 @@ const LoginPage = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('https://graduationshowcase.online/api/v1/auth/sign-in', {
+            const response = await axios.post('https://graduationshowcase.onrender.com/api/v1/auth/sign-in', {
                 username: username,
                 password: password,
             });
@@ -42,7 +42,7 @@ const LoginPage = () => {
             const idToken = await result.user.getIdToken();
             
             const tokenResponse = await axios.post(
-                'https://graduationshowcase.online/api/v1/auth/google',
+                'https://graduationshowcase.onrender.com/api/v1/auth/google',
                 {},
                 {
                     headers: {
