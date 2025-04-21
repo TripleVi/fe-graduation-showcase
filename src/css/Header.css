@@ -7,7 +7,7 @@
 .header {
   background: linear-gradient(to right, var(--lightBackground1), var(--lightBackground2));
   max-width: 100%;
-  padding: 12px 24px;
+  padding: 3px 24px;
   margin: 0px auto;
   box-shadow: 0 2px 15px var(--lightBoxShadow);
   transition: all 0.3s ease;
@@ -68,9 +68,9 @@
 }
 
 .header .logo img {
-  width: 160px;
-  height: auto;
-  object-fit: contain;
+  /* width: 160px; */
+  height: 80px;
+  /* object-fit: contain; */
 }
 
 .header .menu {

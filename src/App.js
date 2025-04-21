@@ -5,7 +5,7 @@ import HomePage from './pages/Home';
 import UserHomePage from './pages/UserHome';
 import DetailProjectPage from './pages/DetailProject';
 import ChatPage from "./pages/ChatPage";
-import Box from "./pages/Box";
+// import Box from "./pages/Box";
 import LandingPage from "./pages/LandingPage";
 import NoPermissionPage from "./pages/NoPermissionPage"; // Import the NoPermissionPage component
 import './App.css';

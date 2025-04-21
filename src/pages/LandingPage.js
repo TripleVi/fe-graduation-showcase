@@ -39,7 +39,7 @@ function LandingPage() {
     <div className="landing-page">
       <nav className="navbar">
         <div className="logo">
-          <span className="logo-text">Showcase Project</span>
+          <span className="logo-text">GG Showcase</span>
         </div>
         <ul className="nav-links">
           <li><a href="#projects">Projects</a></li>

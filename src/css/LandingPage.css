@@ -10,10 +10,11 @@
 
 /* Navbar */
 .navbar {
+  box-sizing: border-box;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem 5%;
+  padding: 1.5rem 3%;
   background-color: white;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   position: fixed;
@@ -57,7 +58,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8rem 5% 5rem;
+  padding: 0 5% 5rem;
   min-height: 100vh;
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
 }
