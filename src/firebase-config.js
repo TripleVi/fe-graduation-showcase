@@ -4,7 +4,7 @@ import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBsOvyTBpZ-I5Bd9RgzxJO2-Gbk4ddlYkY",
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
   authDomain: "graduation-showcase.firebaseapp.com",
   projectId: "graduation-showcase",
   storageBucket: "graduation-showcase.appspot.com",

@@ -13,15 +13,16 @@
 
 /* Hero Section */
 .hero-section {
-    margin: -40px -40px 40px;
+    margin: 0 -40px;
+    display: flex;
+    justify-content: center;
 }
 
 .embed-responsive {
     position: relative;
-    width: 100%;
-    padding-bottom: 56.25%;
+    width: 56%;
+    height: 400px;
     background: #000;
-    margin-bottom: 2rem;
 }
 
 .embed-responsive iframe {
@@ -336,7 +337,7 @@
     }
 
     .hero-section {
-        margin: -20px -20px 20px;
+        margin: 0 -20px;
     }
 
     .article-title {
