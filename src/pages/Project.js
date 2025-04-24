@@ -285,10 +285,10 @@ const Project = () => {
                                         {project.year}
                                     </span>
                                 </div>
-                                <p className="project-description">
+                                {/* <p className="project-description">
                                     {project.description?.[0]?.title || 'No description available'}
                                     
-                                </p>
+                                </p> */}
                                 <div className="project-tags">
                                     {project.hashtags.map((tag, index) => (
                                         <span key={index} className="tag">

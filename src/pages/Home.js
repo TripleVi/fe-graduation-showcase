@@ -224,7 +224,7 @@ const HomePage = () => {
                 }}
             >
                 <Toolbar />
-                <Box sx={{ overflow: 'auto' }}>
+                <Box>
                     <List>
                         <ListItem button onClick={() => handleTabChange('dashboard')}>
                             <ListItemIcon><Dashboard /></ListItemIcon>
@@ -263,9 +263,9 @@ const HomePage = () => {
                     </Toolbar>
                 </AppBar>
                 <Toolbar />
-                <Grid container spacing={3}>
+                <Grid>
                     {activeTab === 'dashboard' && (
-                        <DashboardTab/>
+                        <DashboardTab />
                     )}
                     {activeTab === 'projects' && (
                         <ProjectTab projects={projects} />

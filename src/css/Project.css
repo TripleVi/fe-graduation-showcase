@@ -87,7 +87,7 @@
 .project-meta {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 1rem;
+    margin-bottom: 2rem;
     font-size: 0.9rem;
     color: var(--textColor);
 }
@@ -114,7 +114,8 @@
 }
 
 .tag {
-    background: var(--buttonHover);
+    /* background: var(--buttonHover); */
+    background-color: #2284e0;
     color: white;
     padding: 0.25rem 0.75rem;
     border-radius: 15px;

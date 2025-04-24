@@ -105,7 +105,7 @@ const Dashboard = () => {
     };    
 
     return (
-        <Box sx={{ flexGrow: 1 }}>
+        <Box>
             <Typography variant="h4" gutterBottom>
                 Dashboard
             </Typography>
