@@ -55,7 +55,7 @@ function Header() {
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                     <Link to="/userhome" className="logo">
                         <img 
-                            src="https://fpt.edu.vn/Content/images/assets/2022-Greenwich-Eng.jpg" 
+                            src="/logo.jpg"
                             alt="Logo"
                             className="logo-image"
                         />
