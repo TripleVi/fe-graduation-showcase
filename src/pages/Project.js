@@ -355,7 +355,7 @@ const Project = () => {
           ))}
         </div>
       )}
-      <div className="pagination">
+      <div className="pagination" style={{textAlign: 'end', marginBlock: '24px'}}>
         <Button
           disabled={currentPage === 1}
           onClick={() => handlePageChange(currentPage - 1)}
