@@ -1,20 +1,20 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { Avatar, IconButton } from "@mui/material";
+import axios from "axios";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  BiTrash,
+  BiHistory,
+  BiMenu,
   BiPlus,
   BiSend,
   BiSolidUserCircle,
+  BiTrash,
   BiX,
-  BiMenu,
-  BiHistory,
 } from "react-icons/bi";
 import "../css/ChatPage.css";
-import { IconButton, Avatar } from "@mui/material";
-import axios from "axios";
 import avatar from "../img/DALL·E 2024-11-19 05.35.3.png";
 
 const api = axios.create({
-  baseURL: "https://admin-greenshowcase.onrender.com/api/v1",
+  baseURL: process.env.REACT_APP_BE_URL,
 
   headers: {
     Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -137,7 +137,7 @@ function ChatPage({ onClose }) {
         // Tạo chat mới nếu chưa có chat
         if (!currentChatId) {
           const response = await fetch(
-            "https://admin-greenshowcase.onrender.com/api/v1/chats",
+            `${process.env.REACT_APP_BE_URL}/chats`,
             {
               method: "POST",
               headers: {
@@ -194,7 +194,7 @@ function ChatPage({ onClose }) {
         } else {
           // Gửi tin nhắn vào chat hiện tại
           const response = await fetch(
-            `https://admin-greenshowcase.onrender.com/api/v1/chats/${newChatId}/messages`,
+            `${process.env.REACT_APP_BE_URL}/chats/${newChatId}/messages`,
             {
               method: "POST",
               headers: {

@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from "react";
 import {
+  Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  TextField,
-  Button,
-  MenuItem,
   Grid,
+  MenuItem,
   Snackbar,
+  TextField,
 } from "@mui/material";
+import { useEffect, useState } from "react";
 // import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from "@mui/icons-material/Add";
 import axios from "axios";
@@ -36,7 +36,7 @@ const CreateItemForm = ({ open, handleCreateClose, project, onCreate }) => {
   const [snackbarMessage, setSnackbarMessage] = useState("");
 
   const api = axios.create({
-    baseURL: "https://admin-greenshowcase.onrender.com/api/v1",
+    baseURL: process.env.REACT_APP_BE_URL,
     headers: {
       Authorization: `Bearer ${localStorage.getItem("token")}`,
     },

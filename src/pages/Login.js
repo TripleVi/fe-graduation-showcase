@@ -28,7 +28,7 @@ const LoginPage = () => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        "https://admin-greenshowcase.onrender.com/api/v1/auth/sign-in",
+        `${process.env.REACT_APP_BE_URL}/auth/sign-in`,
         {
           username: username,
           password: password,
@@ -57,7 +57,7 @@ const LoginPage = () => {
       const idToken = await result.user.getIdToken();
 
       const tokenResponse = await axios.post(
-        "https://admin-greenshowcase.onrender.com/api/v1/auth/google",
+        `${process.env.REACT_APP_BE_URL}/auth/google`,
         {},
         {
           headers: {

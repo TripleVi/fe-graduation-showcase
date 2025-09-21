@@ -1,29 +1,29 @@
-import React, { useState, useEffect } from "react";
+import { Delete, Edit } from "@mui/icons-material";
 import {
+  Alert,
   Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogTitle,
   Grid,
   IconButton,
-  Dialog,
-  DialogTitle,
-  DialogActions,
-  Button,
   Snackbar,
-  Alert,
-  Typography,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
-  TableRow,
   TablePagination,
+  TableRow,
+  Typography,
 } from "@mui/material";
-import { Edit, Delete } from "@mui/icons-material";
 import axios from "axios";
+import { useEffect, useState } from "react";
 import UpdateProjectForm from "../components/UpdateProjectForm";
 
 const api = axios.create({
-  baseURL: "https://admin-greenshowcase.onrender.com/api/v1",
+  baseURL: process.env.REACT_APP_BE_URL,
   headers: {
     Authorization: `Bearer ${localStorage.getItem("token")}`, // Token from localStorage
   },

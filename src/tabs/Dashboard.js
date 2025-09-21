@@ -33,7 +33,7 @@ const Dashboard = () => {
     const fetchProjectStats = async () => {
       try {
         const response = await axios.get(
-          "https://admin-greenshowcase.onrender.com/api/v1/projects"
+          `${process.env.REACT_APP_BE_URL}/projects`
         );
         const projects = response.data.data;
 

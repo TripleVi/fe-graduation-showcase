@@ -1,49 +1,46 @@
-import React, { useState, useEffect } from "react";
-import "../css/Home.css"; // Importing Home.css for styling
 import {
-  AppBar,
-  Toolbar,
-  IconButton,
-  Avatar,
-  Drawer,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Divider,
-  Box,
-  Typography,
-  Grid,
-  Dialog,
-  DialogTitle,
-  DialogActions,
-  Button,
-  Select,
-  MenuItem,
-  TextField,
-  Snackbar,
-  Alert,
-} from "@mui/material";
-import {
+  Add,
+  Backup,
   Dashboard,
   Folder,
   School,
   Topic,
-  Add,
-  Backup,
 } from "@mui/icons-material";
+import {
+  Alert,
+  AppBar,
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogTitle,
+  Drawer,
+  Grid,
+  IconButton,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  MenuItem,
+  Select,
+  Snackbar,
+  TextField,
+  Toolbar,
+  Typography,
+} from "@mui/material";
+import { useEffect, useState } from "react";
+import "../css/Home.css"; // Importing Home.css for styling
 
 import axios from "axios";
 import CreateItemForm from "../components/CreateItemForm"; // Importing CreateItemForm
-import UpdateProjectForm from "../components/UpdateProjectForm";
-import ProjectTab from "../tabs/ProjectTab";
-import MajorTab from "../tabs/MajorTab";
-import TopicTab from "../tabs/TopicTab";
 import BackUpTab from "../tabs/BackUpTab";
 import DashboardTab from "../tabs/Dashboard";
+import MajorTab from "../tabs/MajorTab";
+import ProjectTab from "../tabs/ProjectTab";
+import TopicTab from "../tabs/TopicTab";
 
 const api = axios.create({
-  baseURL: "https://admin-greenshowcase.onrender.com/api/v1",
+  baseURL: process.env.REACT_APP_BE_URL,
   headers: {
     Authorization: `Bearer ${localStorage.getItem("token")}`, // Token from localStorage
   },

@@ -1,23 +1,22 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import axios from "axios";
 import {
-  Button,
-  TextField,
-  Container,
-  Typography,
+  Alert,
   Avatar,
-  Grid,
+  Button,
   Chip,
+  Snackbar,
+  TextField,
+  Typography,
 } from "@mui/material";
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import "../css/DetailProject.css";
-import Header from "../pages/Header";
 import Footer from "../pages/Footer";
+import Header from "../pages/Header";
 import BoxAi from "./ChatBox";
-import { Snackbar, Alert } from "@mui/material";
 
 const api = axios.create({
-  baseURL: "https://admin-greenshowcase.onrender.com/api/v1",
+  baseURL: process.env.REACT_APP_BE_URL,
   headers: {
     Authorization: `Bearer ${localStorage.getItem("token")}`,
   },

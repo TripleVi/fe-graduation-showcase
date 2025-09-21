@@ -1,19 +1,19 @@
-import React, { useState, useEffect } from "react";
 import {
+  Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  Button,
-  MenuItem,
-  TextField,
-  Grid,
   FormControl,
-  Select,
+  Grid,
   InputLabel,
+  MenuItem,
+  Select,
   Snackbar,
+  TextField,
 } from "@mui/material";
 import axios from "axios";
+import { useEffect, useState } from "react";
 
 const UpdateProjectForm = ({ open, handleClose, project, onUpdate }) => {
   const [section, setSection] = useState(""); // Current editing section
@@ -42,7 +42,7 @@ const UpdateProjectForm = ({ open, handleClose, project, onUpdate }) => {
   const [snackbarMessage, setSnackbarMessage] = useState("");
 
   const api = axios.create({
-    baseURL: "https://admin-greenshowcase.onrender.com/api/v1",
+    baseURL: process.env.REACT_APP_BE_URL,
     headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
   });
 
